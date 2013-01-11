@@ -1,0 +1,149 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#include die("<t/sample/tab/empty_table> doit exister et etre vide au debut du test") if (!-z "t/sample/tab/empty_table");
+
+#next error
+Delete
+#next error
+Insert
+#next error
+Replace
+
+Delete from empty_table
+Select -s from empty_table
+
+#next error
+Insert into empty_table
+#next error
+Insert into empty_table values clef2%2
+#next error
+Insert into empty_table description values desc1
+#next error
+Insert into empty_table clef,description values clef1%desc1
+#next error
+Insert into empty_table values clef1%not_a_number%desc1
+
+Insert into empty_table values clef1%1%desc1
+Select -s from empty_table
+#next error
+Insert into empty_table values clef espace%1%desc espace
+Select -s from empty_table
+Insert into empty_table values "clef espace%1%desc espace"
+Select -s from empty_table
+Insert into empty_table values "clef espace2" 1 "desc espace"
+Select -s from empty_table
+Insert into empty_table values "clef espace3%1" "desc espace"
+Select -s from empty_table
+#next error
+Insert into empty_table values clef1%1%insert
+Select -s from empty_table
+Insert -f into empty_table values clef1%1%insert
+Select -s from empty_table
+Insert into empty_table clef,valeur,description values clef2%2%desc2
+Select -s from empty_table
+Insert into empty_table clef,valeur values clef3%3
+Select -s from empty_table
+Insert into empty_table valeur,description,clef values 4%desc4%clef4
+Select -s from empty_table
+echo clef5%5%desc5 | Insert into empty_table values -
+Select -s from empty_table
+echo clef espace4%5%desc espace | Insert into empty_table values -
+Select -s from empty_table
+echo 6%clef6%desc6 | Insert into empty_table valeur,clef,description values -
+Select -s from empty_table
+
+Insert into empty_table_nokey values clef1%1%desc1
+Select -s from empty_table_nokey
+Insert into empty_table_nokey values clef2%2%desc2
+Select -s from empty_table_nokey
+Insert into empty_table_nokey values clef1%1%desc1
+Select -s from empty_table_nokey
+
+# triggers
+InsertAndExec into table_fkey values TEST:50:
+Select -s from table_fkey
+Select -s from table_simple
+RemoveAndExec from table_fkey values TEST:50:
+Select -s from table_fkey
+Select -s from table_simple
+
+# valeurs par defaut
+Insert into table_simple ID values 100
+# remplace les dates par leur taille pour les besoin du test
+Select -s from table_simple |perl -F% -ane '$F[2]=length($F[2]);print join("%",@F)'
+
+# Replace
+Replace into empty_table values clef2%22%replace
+Select -s from empty_table
+Replace into empty_table values "clef3" "33" "replace1"
+Select -s from empty_table
+Replace into empty_table values "clef3%33" "replace"
+Select -s from empty_table
+echo clef4%44%replace | Replace into empty_table values -
+Select -s from empty_table
+
+#next error
+Replace into empty_table_nokey values clef1%1%replace
+Select -s from empty_table_nokey
+Replace into empty_table_nokey values clef1%1%replace where clef=clef1
+Select -s from empty_table_nokey
+
+# Modify
+Modify into empty_table values clef2%22%replace with clef2%222%modify
+Select -s from empty_table
+#next error
+Modify into empty_table values clef2 22 replace with "clef3" "333" "modify"
+Select -s from empty_table
+Modify into empty_table values clef3 33 replace with "clef3" "333" "modify"
+Select -s from empty_table
+echo clef4%44%replace | Modify into empty_table values - with clef4%444%modify
+Select -s from empty_table
+echo clef4%4444%modify2 | Modify into empty_table values clef4%444%modify with -
+Select -s from empty_table
+perl -e "print qq{clef4%4444%modify2\nclef4%444%modify\n}" | Modify into empty_table values - with -
+Select -s from empty_table
+
+Modify into empty_table_nokey values clef1%1%replace with clef1%1%modify
+Select -s from empty_table_nokey
+
+# Remove
+#next error
+Remove from empty_table
+Select -s from empty_table
+#next error
+Remove from empty_table VALUES clef5%5
+Select -s from empty_table
+#next error
+Remove from empty_table VALUES clef5%5%
+Select -s from empty_table
+Remove -f from empty_table VALUES clef5%5%
+Select -s from empty_table
+Remove from empty_table VALUES clef5%5%desc5
+Select -s from empty_table
+Remove from empty_table VALUES "clef espace" "1" "desc espace"
+Select -s from empty_table
+echo clef6%6%desc6 | Remove from empty_table values -
+Select -s from empty_table
+
+Remove from empty_table_nokey VALUES clef1%1%modify
+Select -s from empty_table_nokey
+
+# Delete where
+Delete from table_simple where ID=100
+Select -s from table_simple
+Delete from empty_table where clef = clef1
+Select -s from empty_table
+Delete from empty_table where clef = clef2 AND valeur = 4
+Select -s from empty_table
+Delete from empty_table where clef = clef4 AND valeur = 4
+Select -s from empty_table
+Delete from empty_table where description '~' desc
+Select -s from empty_table
+
+Delete from empty_table
+Select -s from empty_table
+Delete from empty_table_nokey
+Select -s from empty_table_nokey

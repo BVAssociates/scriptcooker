@@ -1,0 +1,51 @@
+BV-ITools-Bin
+
+JEUX DE TESTS
+
+Les scripts permettant de tester les I-TOOLS en Perl sont livrés avec le
+module. Pour lancer les tests, modifier le PATH pour inclure les programmes 
+a tester et executer la commande suivante :
+
+	prove -lr t/
+
+
+ECRITURE DES JEUX DE TESTS
+
+Les jeux de tests sont des scripts Perl crees a partir de fichiers contenant une serie de commande a tester. Lors de la compilation, les commandes sont executees et le resultat attendu est stocke dans le script compile.
+
+Les fichiers de commandes se trouvent sous t/gentest/.
+
+Ils peuvent contenir les commandes shell a execute et, des commentaire avec le caractere "#" :
+
+	#ceci est un commentaire
+	ls | wc -l
+
+Il est possible d'inclure du code Perl avec la directive "#include" et d'un code Perl sur la meme ligne :
+
+	#include $ENV{EXPORTED_VAR}="TEST";
+	echo $TEST
+
+Si une commande doit retourner un code d'erreur, il faut indiquer "#next error" sur la ligne precedant la commande :
+
+	#next error
+	ls badfile.txt
+
+Si le jeu de test doit etre explicitement active par l'utilisateur, la directive "#skip_all", suivit d'un message expliquant la raison, permet d'inserer une instruction au debut qui doit etre commenter pour activer le test :
+
+	#skip_all necessite une connexion reseau
+
+Pour regenerer les jeux de tests a partir d'un environnement I-TOOLS valide, charger un profile contenant un environnement I-TOOLS valide et executer les commandes suivantes depuis le répertoire racine du package :
+	
+	. /path/to/profile.RT
+	./bin/make_test.pl
+
+INSTALLATION
+
+SUPPORT AND DOCUMENTATION
+
+LICENSE AND COPYRIGHT
+
+Copyright (C) 2010 BV Associates
+
+This program is released under the following license: Proprietary
+

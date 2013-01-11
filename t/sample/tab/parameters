@@ -1,0 +1,12 @@
+# $Revision: 1.2 $
+#
+#Parameter;Value;Description
+#===========================
+
+VAR%%$(echo "var" | sed 's/var/valeur/')%%Substitution de commande 
+VAR_IMBRIQUE%%$(echo "var" | sed $(echo 's/var/valeur/'))%%Substitution de commande imbriquee
+VAR_FALSE%%$(echo "false" && false)%%Substitution de commande en erreur
+VAR_VIDE%%%%Variable vide
+VAR_VAR%%${TESTVAR}%%Copie de Variable
+VAR_COMPOSE%%${TESTVAR} et ${TESTVAR}%%Composition de variable
+VAR_STATIC%%static%%Variable statique

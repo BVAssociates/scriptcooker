@@ -1,0 +1,20 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : empty_table.def
+#
+# 	Definition de la table de test 
+#
+#       $Revision: 1.1 $
+#
+
+SEP='%'
+FORMAT='clef%valeur%description'
+SIZE='20s%4n%80s'
+NOTNULL='valeur'
+SORT='clef%valeur'
+HEADER="Liste de clef/valeur/description sans clef"

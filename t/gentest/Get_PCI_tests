@@ -1,0 +1,30 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+Get_PCI
+#next error
+Get_PCI FOR unknown_table
+Get_PCI FOR error_messages
+
+Get_PCI FOR table_simple
+Get_PCI FOR table_simple WHERE NodeType = Table
+
+Get_PCI FOR table_fkey
+Get_PCI FOR table_fukey
+Get_PCI FOR table_fkey WITH JOIN
+Get_PCI FOR table_fukey WITH JOIN
+Get_PCI FOR table_fukey WITH JOIN NodeType = Table
+
+Get_PCI -s FOR table_simple
+Get_PCI -t FOR table_simple
+
+#include delete $ENV{TEST_VAR};
+Get_PCI -e FOR table_simple
+Get_PCI -est FOR table_simple
+#include $ENV{TEST_VAR}='test_value';
+Get_PCI -e FOR table_simple
+Get_PCI -est FOR table_simple
+

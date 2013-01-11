@@ -1,0 +1,21 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : table_command.def
+#
+# 	Definition de la table de test avec CMD
+#
+#       $Revision: 1.1 $
+#
+
+COMMAND='PC_LIST_TABLE'
+SEP=';'
+FORMAT='Function;Error;Message'
+SIZE='20s;4n;80s'
+NOTNULL='Function;Error;Message'
+KEY='Function;Error'
+HEADER="Liste des messages d erreur de test renvoyé par une commande"

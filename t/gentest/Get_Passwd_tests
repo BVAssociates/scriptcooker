@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+# depend de l'environnement, verifie seulement root
+Get_Passwd         | perl -F: -ane 'print @F[0,2] if $F[0] eq "root"'
+Get_Passwd -u root | perl -F: -ane 'print @F[0,2] if $F[0] eq "root"'
+
+Get_Group         | perl -F: -ane 'print @F[0,2] if $F[0] eq "root"'
+Get_Group -g root | perl -F: -ane 'print @F[0,2] if $F[0] eq "root"'
+
+

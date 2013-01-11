@@ -1,0 +1,39 @@
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+Search_File
+#next error
+Search_File table_simple
+Search_File -t table_simple
+Search_File -T table_simple
+Search_File -p BV_TABPATH table_simple
+#include $ENV{TEST_PATH}=$ENV{TOOLS_HOME};
+Search_File -p TEST_PATH profile.RT.minimal
+#next error
+Search_File -t error_messages_file
+Search_File -T error_messages_file
+#next error
+Search_File -T error_messages_file_bad
+Search_File -T error_messages_file_dyn
+#next error
+Search_File -t error_messages_file_dyn
+#next error
+Search_File -T error_messages_file_dyn_bad
+#next error
+Search_File -T error_messages_notab
+#next error
+Search_File -T table_command
+Search_File -T logstd
+Search_File -d table_simple
+Search_File -d error_messages_bad
+Search_File table_simple.def
+Search_File -d table_simple.def
+Search_File -c table_simple
+Search_File table_simple.pci
+Search_File -c table_simple.pci
+Search_File -e PC_LIST_TABLE
+
+Search_File -f t/sample/bin/PC_LIST_TABLE
+#next error
+Search_File -f t/sample/bin/unknown_file

@@ -1,0 +1,21 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : error_messages.def
+#
+# 	Definition de la table des messages d'erreur
+#
+#       $Revision: 1.1 $
+#
+
+SEP=';'
+FORMAT='Function;Error;Message'
+SIZE='20s;4n;80s'
+NOTNULL='Message'
+KEY='Function;Error'
+SORT='Function, Error'
+HEADER="Liste des messages d erreur de test"

@@ -1,0 +1,13 @@
+DEFFILE="${TOOLS_HOME}/def/error_messages.def" ; export DEFFILE
+TABLE='error_messages' ; export TABLE
+HEADER='Liste des messages d erreur' ; export HEADER
+TYPE='FT' ; export TYPE
+SEP=';' ; export SEP
+FILE="${TOOLS_HOME}/tab/error_messages" ; export FILE
+COMMAND='' ; export COMMAND
+FORMAT='Function;Error;Message' ; export FORMAT
+SIZE='20s;4n;80s' ; export SIZE
+ROW='$Function;$Error;$Message' ; export ROW
+KEY='Function;Error' ; export KEY
+NOTNULL='Function;Error;Message' ; export NOTNULL
+SORT='Function,Error' ; export SORT

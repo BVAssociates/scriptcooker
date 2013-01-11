@@ -1,0 +1,22 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table :table_fkey .def
+#
+# 	Definition de la table de test des FKEY
+#
+#       $Revision: 1.1 $
+#
+
+SEP=':'
+FORMAT='Composant:Ordre:Description'
+SIZE='20s:4n:80s'
+NOTNULL='Ordre'
+KEY='Composant'
+HEADER="table avec FKEY"
+
+FKEY="[Ordre] on table_simple[field_error]"

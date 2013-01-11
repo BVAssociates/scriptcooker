@@ -1,0 +1,12 @@
+#skip_all desactive car necessite les droits root
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+#include $ENV{BV_LOGASUSER}='t/sample/log/ITasuser.log';
+
+#next error
+rootami
+
+#next error
+Asuser
+Asuser root "id -u"

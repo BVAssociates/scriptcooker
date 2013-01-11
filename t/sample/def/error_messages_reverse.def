@@ -1,0 +1,21 @@
+HEADER="Liste des messages d'erreur de $TESTVAR"
+SORT='Function, Error'
+KEY='Function;Error'
+NOTNULL='Function;Error;Message'
+SIZE='20s;4n;80s'
+FORMAT='Function;Error;Message'
+SEP=';'
+
+#
+#       $Revision: 1.1 $
+#
+# 	Definition de la table des messages d'erreur
+#
+#       Table : error_messages.def
+#
+#       PACK : I-TOOLS
+#
+#	APP : I-TOOLS
+#
+#       BV Associates, 2002
+#

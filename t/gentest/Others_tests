@@ -1,0 +1,20 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#EvaluateDataInTable
+#next skip Bugs dans I-TOOLS 2.0
+EvaluateDataInTable error_messages
+#next skip Bugs dans I-TOOLS 2.0
+EvaluateDataInTable -s error_messages
+
+#CheckDataInTable
+CheckDataInTable error_messages "Function = TEST"
+CheckDataInTable error_messages "Function = TEST" 9
+#next error
+CheckDataInTable error_messages "Function = TEST" 0
+CheckDataInTable error_messages "Function = TEST" 1-4,2-10
+#next error
+CheckDataInTable error_messages "Function = TEST" 1-4,10-12
+

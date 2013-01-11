@@ -1,0 +1,28 @@
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+Check
+
+Check error_messages
+#next error
+Check error_messages_dup
+#next error
+Check error_messages_null
+#next error
+Check table_command_nokey
+Check table_command_nosort
+#next error
+Check table_simple
+
+#next error
+Check table_simple on table_fkey >/dev/null
+Check table_fkey ON >/dev/null
+Check table_fkey ON table_simple
+Check table_fkey ON table_fukey
+Check table_fkey on table_simple
+Check table_fukey on
+#next error
+Check table_fkey_bad ON table_simple
+Check table_fkey_bad ON table_simple WHERE Ordre '<' 10

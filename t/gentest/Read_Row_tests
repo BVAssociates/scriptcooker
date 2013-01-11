@@ -1,0 +1,52 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+echo "" | Read_Row
+
+
+# Select Read_Row
+Select -r1 from error_messages | Read_Row
+Select -r1 from error_messages | Read_Row -n
+Select -r1 from error_messages | Read_Row -e
+Select -r1 from error_messages | Read_Row -H
+Select -r1 from error_messages | Read_Row -q
+# test avec des quote
+Select -r1 from error_messages where Function=TEST AND Error=2 | Read_Row
+Select -r1 from error_messages where Function=TEST AND Error=2 | Read_Row -n
+Select -r1 from error_messages where Function=TEST AND Error=2 | Read_Row -e
+Select -r1 from error_messages where Function=TEST AND Error=2 | Read_Row -H
+Select -r1 from error_messages where Function=TEST AND Error=2 | Read_Row -q
+# test avec des quote double
+Select -r1 from error_messages where Function=TEST AND Error=3 | Read_Row
+Select -r1 from error_messages where Function=TEST AND Error=3 | Read_Row -n
+Select -r1 from error_messages where Function=TEST AND Error=3 | Read_Row -e
+Select -r1 from error_messages where Function=TEST AND Error=3 | Read_Row -H
+Select -r1 from error_messages where Function=TEST AND Error=3 | Read_Row -q
+# test avec des quotes echappees
+Select -r1 from error_messages where Function=TEST AND Error=4 | Read_Row
+Select -r1 from error_messages where Function=TEST AND Error=4 | Read_Row -n
+Select -r1 from error_messages where Function=TEST AND Error=4 | Read_Row -e
+Select -r1 from error_messages where Function=TEST AND Error=4 | Read_Row -H
+Select -r1 from error_messages where Function=TEST AND Error=4 | Read_Row -q
+# test avec des quotes echappees
+Select -r1 from error_messages where Function=TEST AND Error=6 | Read_Row
+Select -r1 from error_messages where Function=TEST AND Error=6 | Read_Row -n
+Select -r1 from error_messages where Function=TEST AND Error=6 | Read_Row -e
+Select -r1 from error_messages where Function=TEST AND Error=6 | Read_Row -H
+Select -r1 from error_messages where Function=TEST AND Error=6 | Read_Row -q
+#next error
+Select -r0 from error_messages | Read_Row
+Select -r0 from error_messages | Read_Row -n
+
+#next error
+Select -s -r1 from error_messages | Read_Row
+#include source_profile('t/sample/Define_Table_error_messages.sh');
+Select -s -r1 from error_messages | Read_Row
+Select -s from error_messages | while Read_Row; do : ;done
+
+# exemple sur un script reel
+PC_PRINT_SQL
+PC_PRINT_SQL.pl

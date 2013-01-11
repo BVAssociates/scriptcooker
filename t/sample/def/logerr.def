@@ -1,0 +1,20 @@
+#
+#       BV Associates, 2002
+#	
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : logerr.def
+#
+#       Table des erreurs des tools et procedures
+#
+#       $Revision: 1.1 $
+#
+
+SEP='|'
+FILE="$BV_LOGERR"
+FORMAT='Date|Domain|Pere|Fils|User|Proc|TypeMessage|Severity|Message'
+SIZE='19d|20s|6n|6n|8s|40s|20s|3n|100s'
+NOTNULL='Date|Domain|Pere|Fils|User|Proc|TypeMessage|Severity|Message'
+HEADER="Messages d erreur consignes"

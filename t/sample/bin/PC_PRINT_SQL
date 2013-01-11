@@ -1,0 +1,161 @@
+#! /usr/bin/ksh
+#
+#	ISIS, 2005
+# 
+#@I-SIS	APP : ISIS				Version : 1.0
+#
+#@I-SIS	I-CLE : <I-CLE>
+#
+#@I-SIS	Date : //2005				Auteur : <Nom Prenom>
+#							 (BV Associates)
+#	Historique des modifications
+#
+#	-------------------------------------------------------------------
+#	|     Date	|    Auteur   |		 Description		  |
+#	-------------------------------------------------------------------
+#	|	   	|	      |   				  |
+#	-------------------------------------------------------------------
+#
+#@I-SIS	FONCTION : <Objectifs de la Methode>
+#
+#@I-SIS	USAGE :  <Ligne de Commande>
+#
+#@I-SIS	OPT : "-h pour avoir l'utilisation de la ligne de commande"
+#
+#@I-SIS	ARG : <Liste des arguments et utilisation>
+#
+#@I-SIS	ENV : <Liste des variables d'environnement et utilisation>
+#
+##########################################################################
+
+########################
+#  FONCTIONS INTERNES  #
+########################
+
+# Sortie et Fin de la fonction
+sortie()
+{
+  [ "${BV_DEBUG}" = "TRUE" ] && Log_End 
+  exit ${BV_SEVERITE}
+}
+
+# Verifie le code retour des fonctions appelees $1
+# Si valorisés, CODEWARN et CODERROR masquent les codes 201 et 202
+Verifie_Coderet()
+{
+  #Vérification de CODRET
+  case $CODRET in
+        0)  ;;
+      201)  BV_SEVERITE=${CODEWARN:-201}
+	    #La Fonction $1 s'est terminee en Warning
+            Log_Error '0303' "$1"
+            ;;
+      202)  BV_SEVERITE=${CODERROR:-202}
+	    #La Fonction $1 s'est terminee en Erreur
+            Log_Error '0304' "$1"
+            sortie
+            ;;
+      203)  BV_SEVERITE=203
+	    #La Fonction $1 s'est terminee en Erreur Critique
+            Log_Error '0305' "$1"
+            sortie
+            ;;
+        *)  BV_SEVERITE=${CODERROR:-202}
+	    #La Fonction $1 s'est terminee en Erreur $CODRET
+            Log_Error '0306' "$1" $CODRET
+            sortie
+            ;;
+  esac
+  #Initialisation de CODEWARN et CODERROR
+  CODEWARN=""
+  CODERROR=""
+}
+
+# Sortie sur erreur fatale
+Fatal_Coderet()
+{
+  if [ $CODRET -ne 0 -a $CODRET -ne 201 -a $CODRET -ne 202 ]
+  then
+    BV_SEVERITE=203
+    Log_Error '0306' "$1" $CODRET
+    sortie
+  fi
+}
+
+##########################
+# Variables Standard BV  #
+##########################
+
+#Codes retours intermediaires (Cf. Verifie_Coderet)
+CODEWARN=""
+CODERROR=""
+CODRET=0
+
+#Variables de Log
+export BV_SEVERITE=0
+export BV_DOMAIN=${BV_DOMAIN:-""}
+FONCTION=$(basename $0)
+export BV_PROC="${BV_PROC}${BV_PROC_SEP}$FONCTION"
+export BV_PERE=$PPID
+export BV_FILS=$$
+
+#Syntaxe du script
+USAGE="USAGE: $FONCTION [-h] ..."
+
+#BV_DEBUG=TRUE => Log_Start/Log_End pour toute exécution
+export BV_DEBUG=${BV_DEBUG:-""}
+[ "${BV_DEBUG}" = "TRUE" ] && Log_Start
+
+########################################
+# Initialisation des Variables Locales #
+########################################
+
+
+##############################
+# Decodification des Options #
+##############################
+
+while getopts h opt 2>/dev/null; do
+  case $opt in
+    h) 	BV_SEVERITE=202
+       	Log_Info -s "$USAGE"
+       	sortie
+       	;;
+    *)  BV_SEVERITE=202
+	Log_Error '0020'
+       	Log_Info -s "$USAGE"
+       	sortie
+	;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+#############################
+# Traitement des Arguments  #
+#############################
+
+if [ $# -ne 0 ]; then
+  BV_SEVERITE=202
+  Log_Error '0021'
+  Log_Info -s "$USAGE"
+  sortie
+fi
+
+##############################
+# Interpretation des Options #
+##############################
+
+
+##########################
+# MAIN : Corps du Script # 
+##########################
+
+Select from error_messages | while eval $(Read_Row || echo false) 
+do
+	Message=$(echo $Message |perl -pe "s/'/''/g")
+	echo "insert into error_messages (Function,Error,Message) values ('$Function','$Error','$Message');"
+done
+
+
+#Fin (sortie sur BV_SEVERITE)
+sortie

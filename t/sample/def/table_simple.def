@@ -1,0 +1,19 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table :table_simple .def
+#
+# 	Definition de la table des messages d'erreur
+#
+#       $Revision: 1.1 $
+#
+
+SEP='%'
+FORMAT='ID%Description%Date%Bool%Pourcentage'
+SIZE='4n%80s%20d%2b%10p'
+KEY='ID'
+HEADER="table simple"

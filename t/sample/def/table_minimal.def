@@ -1,0 +1,16 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : table_minimal.def
+#
+# 	Definition de la table de test 
+#
+#       $Revision: 1.1 $
+#
+
+FORMAT='clef	valeur	description'
+SIZE='20s	4n	80s'

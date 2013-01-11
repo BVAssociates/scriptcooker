@@ -1,0 +1,86 @@
+#!/usr/bin/env perl
+
+print << 'EOF'
+generic;2;Impossible de trouver la table %s
+generic;4;Impossible de trouver le fichier %s
+ME_SECURE_TABORA;0001;Impossible de recuperer la taille du tablespace %s
+generic;12;Impossible de supprimer le fichier %s
+generic;20;L'option %s n'est pas valide
+PC_STAT_TNSNAME;001;Le service TNS %s n'est pas decrit
+ME_SECURE_TABORA;0002;Impossible de recuperer la taille de la table %s
+ME_LOAD_TABORA;0001;Echec du Load sqlldr de %s
+PC_SWITCH_LOGORA;127;Probleme lors du switch des logfiles de %s
+Modify;68;Aucune ligne trouvee a modifier
+generic;24;Ligne de commande incorrecte
+ME_DROP_SYNORA;0001;Probleme a la suppression du Synonyme %s
+generic;35;Le nom de fichier %s n'est pas valide
+V1_alim_30_motcle;0001;ECHEC ce l'Insert Arg de %s dans t_me_alma
+PC_BACK_TBSORA;137;Probleme pour mettre le TBSPACE %s en BEGIN BACKUP
+generic;7;La colonne %s n'existe pas
+generic;28;Impossible de retrouver le symbole %s en librairie !
+PC_LISTID_SQLNET;182;Impossible de trouver le Noyau SqlNet du user %s
+generic;1;Impossible de trouver l'executable %s
+generic;17;La commande <%s> a echoue
+generic;14;Impossible de renommer/deplacer le fichier %s en %s
+PC_CHGSTAT_SERV;0004;Aucune instance n'est associee a l'application %s
+generic;21;Le nombre d'arguments est incorrect
+V1_alim_30_motcle;0003;Rang de l'argument de la methode %s incoherent
+PC_BACK_TBSORA;139;Probleme pour manipuler le TBSPACE %s
+ME_SECURE_TABORA;0004;Impossible de recuperer la taille de la sauvegarde
+PC_LISTBACK_CTRLORA;132;Impossible d'interroger les controlfiles de %s
+generic;15;Impossible de copier le fichier %s
+generic;29;Erreur lors de la fermeture de la librairie %s !
+generic;18;La variable racine BV_HOME ou TOOLS_HOME n'est pas exportee !
+generic;5;Le fichier de definition %s n'est pas valide
+generic;9;La chaine de definition %s n'est pas valide ou est absente
+generic;30;Votre licence d'utilisation %s a expire !
+V1_alim_30_motcle;0002;Argument de la methode %s non declare dans me_alma
+PC_BACK_TBSORA;138;Probleme pour mettre le TBSPACE %s en END BACKUP
+V1_alim_40_meth;0004;L'Insertion du type physique %s a echoue
+generic;23;Utilisation incorrecte de l'option -h
+ME_TRUNC_TABORA;176;Probleme de truncate sur %s (Contrainte type P referencee) 
+generic;31;Le Hostid de la machine n'est pas valide !
+generic;32;La licence n'est pas valide !
+V1_alim_40_meth;0002;L'Insertion de la methode physique %s a echoue
+V1_alim_40_meth;0003;L'Insertion de la variable interne %s a echoue
+PC_LISTID_INSORA;182;Impossible de trouver la Base du user %s
+generic;13;Impossible de changer les droits sur le fichier %s
+generic;34;Le nombre de clients pour ce produit est depasse !
+ME_CREATE_SYNORA;0001;Probleme a la creation du Synonyme %s
+Insert;8;La condition de selection de la cle n'est pas valide
+ME_SECURE_TABORA;0003;Erreur lors de la securisation de la table %s
+generic;33;Il n'y a pas de licence valide pour ce produit !
+Replace;97;Aucune valeur a remplacer n'est specifiee
+PC_LISTBACK_CTRLORA;128;Impossible d'interroger les logfiles de %s
+PC_SWITCH_LOGORA;128;Impossible d'interroger les logfiles de %s
+FT_LIST_TNSNAME;346;Aucun Service TNS convenablement declare dans %s
+generic;10;Impossible d'ouvrir le fichier %s
+generic;8;La condition de selection n'est pas valide
+Modify;8;La condition de selection de la cle n'est pas valide
+V1_alim_30_motcle;0004;ECHEC de l'insertion du mot cle %s dans t_me_ma
+generic;26;Erreur lors d'une re-allocation de memoire %s
+V1_alim_40_meth;0001;Le mot cle d'action %s n'existe pas
+FT_LISTLST_SQLNET;346;Aucun Listener convenablement declare dans %s
+generic;25;Erreur lors d'une allocation de memoire %s
+PC_ENV_SQLNET;506;Impossible de trouver l'environnement de l'instance Sqlnet %s
+Remove;68;Aucune ligne trouvee a supprimer
+Insert;97;Aucune valeur a inserer n'est specifiee
+Replace;68;Aucune ligne trouvee a remplacer
+generic;3;Impossible de trouver ou d'ouvrir le fichier de definition %s
+generic;22;L'argument %s n'est pas valide
+PC_INITF_SQLNET;004;La configuration SqlNet %s de %s est introuvable
+generic;16;Erreur lors d'une ecriture dans le fichier %s
+ME_SECURE_TABORA;0365;Probleme lors de la mise a jour de la table %s
+Modify;97;Aucune valeur a modifier n'est specifiee
+PC_LISTBACK_ARCHORA;0001;Il manque la sequence d'archives %s pour la base %s
+ME_RESTORE_TABORA;0001;Erreur lors de la restauration de la table %s
+generic;6;La table %s est une table virtuelle
+generic;19;L'evaluation de <%s> est incorrecte !
+PC_LISTBACK_ARCHORA;0002;Il n'existe pas d'archives commençant a la sequence %s.
+Check;65;Non unicite de la clef  # test de commentaire
+generic;11;Impossible d'ecrire dans le fichier %s
+generic;27;Erreur lors du chargement de la librairie %s !
+PC_STAT_TNSNAME;003;Erreur de configuration de l'adresse du service TNS %s
+Replace;8;La condition de selection de la cle n'est pas valide
+PC_STAT_TNSNAME;002;Il n'y a pas de listener demarre servant le service TNS %s
+EOF

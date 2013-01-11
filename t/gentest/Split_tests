@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+echo "" | Split
+echo "abcdefghijklmnopkrstuvwxyz" | Split -s: 1
+echo "abcdefghijklmnopkrstuvwxyz" | Split -s: 1 8
+echo "abcdefghijklmnopkrstuvwxyz" | Split -s: 1 8 9
+echo "abcdefghijklmnopkrstuvwxyz" | Split -s: 1 8 9 16
+echo "abcdefghijklmnopkrstuvwxyz" | Split -s: 1 8 9 16 17
+echo "abcdefghijklmnopkrstuvwxyz" | Split -s: 1 8 9 16 17 24
+echo "       abcdefghijklmnopkrstuvwxyz" | Split -s: 1 8 9 16 17 24 25 26
+echo "       abcdefghijklmnopkrstuvwxyz" | Split -x -s: 1 8 9 16 17 24 25 26
+Split -f $SAMPLE/tab/error_messages -s: 1 8 9 16 17 24 25 26

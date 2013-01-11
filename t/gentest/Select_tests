@@ -1,0 +1,219 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+# Select sans args (plante)
+#next error car par d'argument
+Select
+
+# Select simples
+Select from error_messages
+Select '*' from error_messages
+Select FROM error_messages
+Select From error_messages
+Select -s from error_messages
+Select -r0 from error_messages
+Select -r1 from error_messages
+
+# Select avec tri
+Select from error_messages_sort
+Select Error from error_messages_sort
+Select Error,Function from error_messages_sort
+Select Message,Function from error_messages_sort
+Select -s from error_messages_sort
+Select -r0 from error_messages_sort
+
+#next skip Casse compatibilité (Voir http://srcsrv/issues/17)
+Select -r1 from error_messages_sort
+
+# Select pipe
+Select from error_messages | Select from -
+Select from error_messages | Select -s from -
+#next error
+Select -s from error_messages | Select from -
+
+# Select speciaux
+Select -s -r0 from error_messages
+Select -s -r1 from error_messages
+Select from table_space
+Select OWNER,SUBOBJECT_NAME,DATA_OBJECT_ID,CREATED,TIMESTAMP,TEMPORARY,SECONDARY from table_space
+
+# Select where
+Select -s from error_messages where
+Select -s from error_messages where Function=Check
+Select -s -r10 from error_messages where Function=Check
+Select -s from error_messages where Function =Check
+Select -s from error_messages where Function= Check
+Select -s from error_messages where Function = Check
+Select -s from error_messages where "Function = Check"
+
+# Select where colonne=.colonne
+#next error car type different
+Select -s from error_messages where Function=.Error
+#next error car colonne inconnue
+Select -s from error_messages where Unknown=.Error
+Select -s from error_messages where Function=.Message
+Select -s from error_messages where Function=.Unknown
+#next error
+Select -s from error_messages "where Function = Check"
+
+# Select where ops (num)
+Select -s from error_messages where Error '=' 2
+Select -s from error_messages where Error '=' 2.00
+Select -s from error_messages where Error '=' 2,00
+#next error
+Select -s from error_messages where Error '=' texte
+#next error
+Select -s from error_messages where Error '=' -2
+#next error
+Select -s from error_messages where Error '~' 2
+#next error
+Select -s from error_messages where Error '!~' 2
+#next skip Bug I-TOOLS 2.0 (Voir http://srcsrv/issues/26)
+Select -s from error_messages where Error '==' 2
+Select -s from error_messages where Error '!=' 2
+Select -s from error_messages where Error '>' 2
+Select -s from error_messages where Error '>=' 2
+Select -s from error_messages where Error '<' 2
+Select -s from error_messages where Error '<=' 2
+Select -s from table_simple where ID '>' 1
+
+# Select where ops (percent)
+Select -s from table_simple where Pourcentage '=' 60
+Select -s from table_simple where Pourcentage '=' 60%
+Select -s from table_simple where Pourcentage '=' 60.00
+#next error
+Select -s from table_simple where Pourcentage '=' texte
+#next error
+Select -s from table_simple where Pourcentage '=' -60
+#next error
+Select -s from table_simple where Pourcentage '~' 60
+#next error
+Select -s from table_simple where Pourcentage '!~' 60
+Select -s from table_simple where Pourcentage '==' 60
+Select -s from table_simple where Pourcentage '!=' 60
+Select -s from table_simple where Pourcentage '>' 60
+Select -s from table_simple where Pourcentage '>=' 60
+Select -s from table_simple where Pourcentage '<' 60
+Select -s from table_simple where Pourcentage '<=' 60
+
+# Select where ops (str)
+Select -s from error_messages where Message = NOPE
+Select -s from error_messages where Message == NOPE
+Select -s from error_messages where Message != NOPE
+Select -s from error_messages where Message '~' NOPE
+Select -s from error_messages where Message '!~' NOPE
+Select -s from error_messages where Message '~' Aucune
+Select -s from error_messages where Message '~' Aucune ligne
+Select -s from error_messages where Message '~' '"Aucune ligne"'
+Select -s from error_messages where Message '~' "'Aucune ligne'"
+Select -s from error_messages where Message '~' '\'
+Select -s from error_messages where Message '~' '\\'
+Select -s from error_messages where Message '<' Aucune
+Select -s from error_messages where Message '<=' Aucune
+Select -s from error_messages where Message '>' Aucune
+Select -s from error_messages where Message '>=' Aucune
+#next skip Bug I-TOOLS 2.0
+Select -s from error_messages where Message '~' and
+Select -s from error_messages where Message '~' '"and"'
+Select -s from error_messages where Message '~' "'and'"
+
+# Select where ops (date)
+Select -s from table_simple where Date = 20110101120000
+Select -s from table_simple where Date = 2011
+Select -s from table_simple where Date != 20110101120000
+Select -s from table_simple where Date '~' 2011
+Select -s from table_simple where Date '!~' 2011
+Select -s from table_simple where Date '<' 2011
+Select -s from table_simple where Date '<=' 2011
+Select -s from table_simple where Date '>' 2011
+Select -s from table_simple where Date '>=' 2011
+
+# Select where ops (bool)
+Select -s from table_simple where Bool = 1
+Select -s from table_simple where Bool = 0
+Select -s from table_simple where Bool = O
+Select -s from table_simple where Bool = N
+Select -s from table_simple where Bool = Y
+#next error
+Select -s from table_simple where Bool = texte
+#next error
+Select -s from table_simple where Bool = 3
+Select -s from table_simple where Bool != 1
+#next error
+Select -s from table_simple where Bool '~' 0
+#next error
+Select -s from table_simple where Bool '~' 1
+#next error
+Select -s from table_simple where Bool '!~' 1
+Select -s from table_simple where Bool '<' 1
+Select -s from table_simple where Bool '<=' 1
+Select -s from table_simple where Bool '>' 1
+Select -s from table_simple where Bool '>=' 1
+
+# Select where AND/OR
+Select -s from error_messages where Error '>' 80 AND Message '~' Aucune
+Select -s from error_messages where Error '>' 80 AND Message '~' Aucune ligne AND Function = Replace
+#next error
+Select -s from error_messages where Error '>' 80 AND Message '~' Aucune ligne AND AND Function = Replace
+Select -s from error_messages where Error '>' 80 AND Message '~' "'Aucune ligne AND'" AND Function = Replace
+Select -s from error_messages where Error '>' 80 AND Message '~' '"Aucune ligne AND"' AND Function = Replace
+Select -s from error_messages where Error '>' 80 OR Message '~' Aucune
+Select -s from error_messages where Error '>' 80 OR Message '~' Aucune OR Function = Replace
+Select -s from error_messages where Error '>' 80 AND Message '~' Aucune OR Function = Replace
+Select -s from error_messages where Error '>' 80 OR Message '~' Aucune AND Function = Replace
+
+# Select -m
+Select -m';' from error_messages
+#next skip Bug I-TOOLS 2.0 (Voir http://srcsrv/issues/35)
+Select -m%% from error_messages
+Select -m% from table_simple
+Select -m%% from table_simple
+Select -mX from table_simple
+
+# Select columns
+Select Function from error_messages
+Select Function,Error from error_messages
+Select Function, Error from error_messages
+Select Function ,Error from error_messages
+Select Function , Error from error_messages
+Select Function , Error from error_messages_doublesep
+
+# Select ORDER_BY
+Select from error_messages ORDER_BY
+Select from error_messages ORDER_BY Message
+Select from error_messages ORDER_BY Message ASC
+Select from error_messages ORDER_BY Message DESC
+Select from error_messages ORDER_BY Error,Function
+Select from error_messages ORDER_BY Error DESC , Function ASC
+Select from error_messages ORDER_BY Function,Error
+Select from error_messages_sort ORDER_BY
+Select from error_messages_sort ORDER_BY Message
+Select from error_messages_sort ORDER_BY Error DESC , Function ASC
+#next error
+Select from error_messages ORDER BY Function,Error
+Select from table_command_nosort
+Select from table_command_nosort ORDER_BY
+Select from table_command_nosort ORDER_BY Message,Function
+Select from table_command_nokey
+Select from table_command_nokey ORDER_BY
+Select from table_command_nokey ORDER_BY Message,Function
+Select from error_messages_doublesep ORDER_BY Message,Function
+
+# Select complet
+Select from error_messages WHERE ORDER_BY
+Select Message from error_messages WHERE ORDER_BY Function,Message
+Select Message from error_messages WHERE Error=2 ORDER_BY
+Select Message from error_messages WHERE Error=2 ORDER_BY Function
+
+# Select table COMMAND
+Select from table_command
+
+# Select avec FILE=
+Select from error_messages_file
+#next error
+Select from error_messages_file_bad
+Select from error_messages_file_dyn
+#next error
+Select from error_messages_file_dyn_bad

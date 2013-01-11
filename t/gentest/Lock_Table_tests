@@ -1,0 +1,26 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+Lock_Table
+#next error
+#next skip Comportement non reporté en I-TOOLS 2.1
+Lock_Table -u error_messages 
+#next error
+#next skip Comportement non reporté en I-TOOLS 2.1
+Lock_Table -u error_messages error_messages
+
+
+Lock_Table error_messages 
+#next error
+#next skip Comportement non reporté en I-TOOLS 2.1
+Lock_Table error_messages 
+#next error
+#next skip Comportement non reporté en I-TOOLS 2.1
+Lock_Table -t0 error_messages 
+Lock_Table -u error_messages 
+
+Lock_Table error_messages error_messages_dup
+Lock_Table -u error_messages error_messages_dup

@@ -1,0 +1,5 @@
+# NodeType~Group~Label~Responsabilities~Condition~PreProcessing~Processor~Arguments~Confirm~PostProcessing~Icon
+#===========================================================================================================
+
+Table~~explorer~user~~~Explore~~~~Expand
+Item~Action~script~user~~~ExecuteProcedure~ls~~~Expand

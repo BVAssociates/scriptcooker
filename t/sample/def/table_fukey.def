@@ -1,0 +1,21 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table :table_simple .def
+#
+# 	Definition de la table des messages d'erreur
+#
+#       $Revision: 1.1 $
+#
+
+SEP=';'
+FORMAT='ID;Description'
+SIZE='4n;80s'
+KEY='ID'
+HEADER="table avec FUKEY"
+
+FKEY="[ID] on table_simple[ID]"

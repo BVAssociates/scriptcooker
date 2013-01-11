@@ -1,0 +1,11 @@
+# NodeType~Group~Label~Responsabilities~Condition~PreProcessing~Processor~Arguments~Confirm~PostProcessing~Icon
+#===========================================================================================================
+
+Table~~explorer~user~~~Explore~~~~Expand
+Item~Explorer~clef etrangeres~user~~~Explore~table_fkey~~~Expand
+Item~Explorer~clef etrangeres FUKEY~user~~~Explore~table_fukey~~~Expand
+
+Item~Test~desactivé~user~perl -e 'exit 1'~~Explore~table_fkey~~~Expand
+Item~Test~activé~user~perl -e 'exit 0'~~Explore~table_fkey~~~Expand
+Item~Test $TEST_VAR~variable $TEST_VAR~user,$TEST_VAR~perl -e 'exit length "$TEST_VAR"'~~Explore~$TEST_VAR~$TEST_VAR~$TEST_VAR~$TEST_VAR
+Item~Test ${TEST_VAR}~variable ${TEST_VAR}~user,${TEST_VAR}~perl -e 'exit length "${TEST_VAR}"'~~Explore~${TEST_VAR}~${TEST_VAR}~${TEST_VAR}~${TEST_VAR}

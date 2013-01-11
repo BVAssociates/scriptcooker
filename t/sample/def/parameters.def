@@ -1,0 +1,25 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : parameters.def
+#
+# 	Definition de la table des parametres
+#
+#	ATTENTION :
+#	L'ordre des parametres est important
+#	=> Ne jamais trier
+#
+#       $Revision: 1.1 $
+#
+
+SEP='%%'
+FILE="${PARAMETERS_FILE}"
+FORMAT='Parameter%%Value%%Description'
+SIZE='15s%%50s%%60s'
+NOTNULL='Parameter'
+KEY='Parameter'
+HEADER="Liste de parametres"

@@ -1,0 +1,10 @@
+# NodeType~Group~Label~Responsabilities~Condition~PreProcessing~Processor~Arguments~Confirm~PostProcessing~Icon
+#===========================================================================================================
+
+Table~~explorer~user~~~Explore~~~~Expand
+Item~Action~script~user~~~ExecuteProcedure~ls~~~Expand
+
+# triggers
+~Insert~PreAction~~perl -e "exit 1"~~ExecuteProcedure~nope~~~
+~Insert~PostAction~~~{DESC="Description avec espace"}{DATE=20110101000000}{PORCENT='60'}~ExecuteProcedure~InsertAndExec into table_simple values "$Ordre%$DESC%$DATE%%$PORCENT"~~~
+~Remove~PreAction~~~~ExecuteProcedure~Delete from table_simple Where ID=$Ordre~~~

@@ -1,0 +1,35 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+Define_Table
+#next error
+Define_Table unknown_table
+#next error
+Define_Table error_messages_bad
+Define_Table error_messages
+Define_Table error_messages_reverse
+Define_Table error_messages.def
+Define_Table error_messages_notab
+Define_Table error_messages_file
+Define_Table error_messages_file_bad
+Define_Table error_messages_file_dyn
+Define_Table error_messages_file_dyn_bad
+Define_Table error_messages_doublesep
+Define_Table pci
+#next error
+Define_Table logstd
+
+# tables avec relations FKEY
+Define_Table table_simple
+Define_Table table_fkey
+Define_Table table_fkey_double
+Define_Table table_fukey
+Define_Table table_fukey2
+
+#next error
+Define_Table table_fkey_error
+#next error
+Define_Table table_fkey_field_error

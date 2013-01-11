@@ -1,0 +1,75 @@
+# Note : les tests sont peu représentatifs car ils dépendent
+#        trop de l'environnement d'execution
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+Purge_Log logstd
+Purge_Log logerr
+
+#include delete $ENV{BV_PROC};
+#include delete $ENV{BV_DOMAIN};
+#include delete $ENV{BV_PERE};
+#include delete $ENV{BV_FILS};
+#next error
+Log_Error
+
+Purge_Log logstd
+Purge_Log logerr
+
+#include $ENV{BV_PROC}="proc_test";
+#include $ENV{BV_DOMAIN}="domaine_test";
+#include $ENV{BV_PERE}=1;
+#include $ENV{BV_FILS}=7777;
+
+#include delete $ENV{BV_SEVERITE};
+Log_Start
+Log_Error 100 "test d'erreur"
+#next error
+Log_Error -- -o 100 "test d'erreur"
+Log_Info "test d'info"
+Log_Info -- -o "test d'info"
+Log_End
+
+#include $ENV{BV_SEVERITE}=0;
+Log_Start
+Log_Error 99 "id col" "T1"
+Log_Error -- 99 "id col" "T2"
+Log_Info "test d'info"
+Log_End
+
+
+#include $ENV{BV_DOMAIN}="autredomaine_test";
+#include $ENV{BV_SEVERITE}=200;
+Log_Start
+Log_Error 100 "test d'erreur"
+Log_Info "test d'info"
+Log_End
+
+Log_Start -s
+Log_Error -s 100 "test d'erreur"
+Log_Info -s "test d'info"
+Log_End -s
+
+Log_Start -l
+Log_Error -l 100 "test d'erreur"
+Log_Info -l "test d'info"
+Log_End -l
+
+# log sur output, en ne gardant que les donnees fixes
+#next skip Changement de format
+Log_Start -o | perl -F"\|" -ane "print join(',',@F[1],@F[5],@F[7..8]).qq{\n}"
+Log_Error -o 100 "test d'erreur" | perl -F"\|" -ane "print join(',',@F[1],@F[5],@F[7..8]).qq{\n}"
+Log_Info -o "test d'info" | perl -F"\|" -ane "print join(',',@F[1],@F[5],@F[7..8]).qq{\n}"
+#next skip Changement de format
+Log_End -o | perl -F"\|" -ane "print join(',',@F[1],@F[5],@F[7..8]).qq{\n}"
+
+Purge_Log -t Debut logstd
+Purge_Log -u user logstd
+Purge_Log -o20 logstd
+#Purge_Log -o20 -n10 logstd
+#Purge_Log -n10 logstd
+
+Purge_Log logstd
+Purge_Log logerr
+

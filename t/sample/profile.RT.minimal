@@ -1,0 +1,34 @@
+echo "chargement du profile I-TOOLS"
+
+PATH="$PATH:$PWD/bin"
+export PATH
+PERL5LIB="$PWD/lib"
+export PERL5LIB
+
+echo "chargement de l'environnement de test"
+
+SAMPLE="$PWD/t/sample"
+export SAMPLE
+
+TOOLS_HOME="$SAMPLE"
+export TOOLS_HOME
+PATH="$PATH:$SAMPLE/bin"
+export PATH
+BV_DEFPATH="$SAMPLE/def"
+export BV_DEFPATH
+BV_TABPATH="$SAMPLE/tab"
+export BV_TABPATH
+BV_PCIPATH="$SAMPLE/pci"
+export BV_PCIPATH
+
+
+BV_LOGFILE="$SAMPLE/log/ITstd.log"
+export BV_LOGFILE
+BV_LOGERR="$SAMPLE/log/ITerr.log"
+export BV_LOGERR
+
+TESTVAR="variable evaluee"
+export TESTVAR
+
+IT20_COMPLIANT="1"
+export IT20_COMPLIANT

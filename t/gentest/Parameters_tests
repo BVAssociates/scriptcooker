@@ -1,0 +1,18 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+Parameters parameters
+Parameters t/sample/tab/parameters
+#include $ENV{PARAMETERS_FILE}="$ENV{TOOLS_HOME}/tab/parameters";
+Parameters
+Parameters -s
+#next skip BUG dans I-TOOLS 2.0
+Parameters -v
+Parameters -vs
+Parameters -e
+#next skip BUG dans I-TOOLS 2.0
+Parameters -ev
+Parameters -es
+Parameters -evs

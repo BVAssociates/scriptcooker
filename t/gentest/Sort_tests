@@ -1,0 +1,27 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+#next error
+echo "" | Sort
+
+Select from error_messages | Sort
+Select from error_messages | Sort -s
+Select from error_messages | Sort -r -s
+Select from error_messages | Sort -o Message
+Select from error_messages | Sort -o Error,Message
+Select from error_messages | Sort BY Error,Message
+Select from error_messages | Sort by Error,Message
+Select from error_messages | Sort -o Function BY Error,Message
+Select from error_messages | Sort by Error ASC, Function DESC
+Select from error_messages | Sort -o Message by Error ASC, Function DESC
+Select from error_messages | Sort -u -o Function BY Error,Message
+Select from error_messages_dup | Sort -u
+Select from error_messages_dup | Sort -r -u
+Select from error_messages_dup | Sort -s -u
+Select from error_messages_dup | Sort -r -s -u
+
+#include source_profile('t/sample/Define_Table_error_messages.sh');
+Select -s from error_messages | Sort
+Select -s from error_messages | Sort -s

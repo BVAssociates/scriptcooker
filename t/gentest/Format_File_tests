@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#include use ScriptCooker::Utils;
+#include source_profile('t/sample/profile.RT.minimal');
+
+echo "" | Formate_File -
+Select -s from error_messages | Formate_File -
+Formate_File $SAMPLE/tab/error_messages
+Select -s from table_simple | Formate_File -s%/: -
+Select -s from table_simple | Formate_File -s%/:: -
+Select -s from table_simple | Formate_File -s':/\t' -
+Select -s from table_simple | Formate_File -s":/\t" -
+
+#next error
+Select -s from error_messages | Formate_File -s\;/% -n 0 -
+#next error
+Select -s from error_messages | Formate_File -s";/\n" -
+
+Select -s from error_messages | Formate_File -s\;/% -n 1 -
+Select -s from error_messages | Formate_File -s\;/% -n 2 -
+Select -s from error_messages | Formate_File -s\;/% -n 3 -
+#next skip Bug I-TOOLS 2.0
+Select -s from error_messages | Formate_File -s\;/% -n 4 -
+#next skip Bug I-TOOLS 2.0
+Select -s from error_messages | Formate_File -s\;/% -n 5 -
