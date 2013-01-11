@@ -1,0 +1,124 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Get_Passwd [-h] [-u User]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -u : Filtrer sur l'utilisateur
+#
+# ARGUMENTS
+#
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Get_Passwd [-h] [-u User]
+USAGE
+}
+
+sub print_user {
+    my @pw_info = @_;
+
+    if (! @pw_info) {
+        die("Aucune info a afficher");
+    }
+
+    map { $_='' if ! defined $_ } @pw_info;
+
+    my ($name,$passwd,$uid,$gid,$quota,
+        $comment,$gcos,$dir,$shell,$expire) = @pw_info;
+
+    print join(':', $name,$passwd,$uid,$gid,$gcos,$dir,$shell);
+    print "\n";
+
+    return;
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hu:', \%opts ) or usage();
+
+usage() if $opts{h};
+
+my $user = $opts{u};
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 0 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+
+#  Corps du script
+###########################################################
+
+BEGIN {
+    if ( $^O eq 'MSWin32' )  {
+        eval ('use Win32;
+                use Win32::pwent qw(getpwnam getpwent);'
+            );
+    }
+}
+
+if ( defined $user ) {
+    my @pw_info = getpwnam($user);
+    print_user(@pw_info);
+}
+else {
+    while( my @pw_info=getpwent() ) {
+        print_user(@pw_info);
+    }
+}

@@ -1,0 +1,208 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Modify [-h] INTO <Table>
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    Table : Table à modifier
+#    Valeurs1|- : valeurs à remplacer séparées par le séparateur de la définition
+#    Valeurs2|- : nouvelles valeurs séparées par le séparateur de la définition
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Modify [-h] INTO <Table>
+    VALUES <Valeurs1|-> WITH <Valeurs2|->
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'h', \%opts ) or usage();
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 6 ) {
+    $logger->error(_t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $table_name;
+my @old_values;
+my @new_values;
+
+my $current_keyword;
+foreach my $arg ( @ARGV ) {
+
+    if ( ! $current_keyword ) {
+        if ( uc($arg) eq 'INTO' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            usage();
+        }
+    }
+    elsif ($current_keyword eq 'INTO') {
+        if ( uc($arg) eq 'VALUES' ) {
+            $current_keyword = uc($arg);
+        }
+        elsif ( ! $table_name) {
+            $table_name = $arg;   
+        }
+        else {
+            usage();
+        }
+    }
+    elsif ($current_keyword eq 'VALUES') {
+        if ( uc($arg) eq 'WITH' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            push @old_values, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'WITH') {
+        push @new_values, $arg;   
+    }
+}
+
+if ( ! @old_values || ! @new_values || ! $table_name ) {
+    usage();
+}
+
+#use Data::Dumper;die Dumper($table_name,\@old_values,\@new_values);
+
+#  Corps du script
+###########################################################
+
+my $itable;
+
+$itable = ScriptCooker::ITable->open($table_name);
+
+my @columns = $itable->field();
+
+my $separator = $itable->definition()->separator();
+
+
+# recherche des VALUES sur l'entree standard
+if ( @old_values == 1 && $old_values[0] eq '-' ) {
+    my $values = <STDIN>;
+    chomp $values;
+
+    if ( $values ) {
+        @old_values = ( $values );
+    }
+    else {
+        @old_values = ();
+    }
+}
+
+# recherche des VALUES sur l'entree standard
+if ( @new_values == 1 && $new_values[0] eq '-' ) {
+    my $values = <STDIN>;
+    chomp $values;
+
+    if ( $values ) {
+        @new_values = ( $values );
+    }
+    else {
+        @new_values = ();
+    }
+}
+
+# découpe les valeurs
+my @split_values;
+foreach my $value ( @old_values ) {
+    # essayons de decouper les lignes
+    my @field = split($separator, $value,-1);
+    push @split_values, @field;
+}
+@old_values=@split_values;
+
+# découpe les valeurs
+undef @split_values;
+foreach my $value ( @new_values ) {
+    # essayons de decouper les lignes
+    my @field = split($separator, $value,-1);
+    push @split_values, @field;
+}
+@new_values=@split_values;
+
+
+my %old_update_hash;
+my %new_update_hash;
+foreach my $field ( @columns ) {
+    $old_update_hash{$field}=shift @old_values;
+    $new_update_hash{$field}=shift @new_values;
+}
+
+# fabrication de la condition
+my @condition_list;
+foreach my $field ( keys %old_update_hash) {
+    push @condition_list, "$field = '$old_update_hash{$field}'";
+}
+
+$itable->query_condition(join(' AND ', @condition_list));
+
+$itable->update_row(%new_update_hash);
+
+
+
+

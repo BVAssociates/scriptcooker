@@ -1,0 +1,164 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    Recherche les chaines non traduites dans les programmes
+#
+# SYNOPSIS
+#    Usage : Check_Translation root_path
+#
+# OPTIONS
+#    -h pour avoir l'utilisation de la ligne de commande
+#    -d pour afficher les entrées a ajouter au %Lexicon
+#
+# ARGUMENTS
+#    File.suf : renvoie le chemin du fichier en fonction de son suffixe
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::L10N;
+use ScriptCooker::Log 2.1.0 qw($logger _t);
+use File::Find;
+use Carp;
+
+# variables globales
+
+sub usage {
+        croak(_t("Usage: [_1]","Check_Translation [-h] [-d] root_path"));
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hvd', \%opts ) or usage();
+
+
+usage() if $opts{h};
+
+my $dump_hash=$opts{d};
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 1 ) {
+    $logger->error( _t('Le nombre d\'argument est incorrect'));
+    usage();
+}
+
+my @root_path = @ARGV;
+
+
+#  Corps du script
+###########################################################
+
+my $lh = ScriptCooker::L10N->get_handle('en');
+$lh->fail_with('failure_handler_auto');
+
+my @chunk_data = ("*chunk*") x 99;
+
+sub wanted {
+    my $file_path = $File::Find::name;
+    my $file_name = $_;
+
+
+    return if $file_path =~ /\.svn/;
+
+    if ( -d $file_name ) {
+        $logger->info("Descent dans le répertoire $file_path");
+    }
+
+    #fichier vide
+    return if -z $file_name;
+    #pas un fichier
+    return if ! -f $file_name;
+    #fichier caché
+    return if $file_name =~ /^\./;
+    #pas les droits en lecture
+    return if ! -r $file_name;
+
+    $logger->debug("$file_path");
+    open my $file_fd, '<', $file_name or die "$file_path : $!";
+
+    #ne traite que les .pm ou les shebang perl
+    if ( $file_name !~ /\.pm$/ ) {
+        my $first_line=<$file_fd>;
+        return if $first_line !~ /perl/;
+    }
+
+    $logger->debug("Recherche dans $file_path");
+    seek($file_fd, 0, 0);
+    while ( my $line = <$file_fd> ) {
+        chomp $line;
+        
+        # recherche _t('c\'est du texte')
+        if ($line =~ /_t\(\s*(['"])(.*?[^\\])\1/g) {
+            my $text=$2;
+            $text =~ s/\\//g;
+
+            if (exists $lh->{failure_lex}->{$text} ) {
+                # deja traite
+                next;
+            }
+
+            # tente de le traduire et l'affiche sinon
+            my $translate = $lh->maketext($text ,@chunk_data);
+            #use Data::Dumper;warn Dumper $lh->{failure_lex};
+
+            if (exists $lh->{failure_lex}->{$text} ) {
+                $logger->error("MISSING $file_name:$.:$text\n");
+            }
+            else {
+                $logger->info("OK $file_name:$.:$text ($translate)")
+            }
+        }
+
+    }
+    close $file_fd or croak $!;
+}
+
+find(\&wanted, @root_path);
+
+if ( $dump_hash ) {
+    foreach my $message ( sort keys %{ $lh->{failure_lex} } ) {
+        $message =~ s/'/\\'/g;
+        printf("    # %-70s => '',\n", q{'}.$message.q{'});
+    }
+}

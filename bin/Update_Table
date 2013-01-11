@@ -1,0 +1,120 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#   Transfère les arguments à la commande en premier arguments
+#
+# SYNOPSIS
+#    Usage : Update_Table [-h] Delete|Insert|Modify|Replace|Select <Arguments>
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    Commande à executer
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#   Commande de compatibilité, ne doit plus être utilisée.
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use Carp;
+
+use File::Basename;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Update_Table [-h] Delete|Insert|Modify|Replace|Select <Arguments>
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hu', \%opts ) or usage();
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 2 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+# liste des commandes autorisées
+my @allowed_command = (
+                'Delete',
+                'Insert',
+                'Modify',
+                'Replace',
+                'Select',
+            );
+
+my $command=shift @ARGV;
+
+if ( ! grep {$_ eq $command} @allowed_command) {
+    usage();
+}
+
+#  Corps du script
+###########################################################
+
+if ( ! $ENV{IT20_COMPLIANT} ) {
+    warn (_t("La commande [_1] est obsolete",basename($0)));
+    set_exit_code(0);
+}
+
+# appel de la commande avec ses arguments
+system $command,@ARGV;
+if ( $? == -1) {
+    die(_t("Problème lors du lancement de la commande [_1]", join(' ',$command,@ARGV)));
+}
+else {
+    my $return_code=$?>>8;
+    set_exit_code($return_code);
+}

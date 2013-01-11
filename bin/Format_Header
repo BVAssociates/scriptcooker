@@ -1,0 +1,199 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision$
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    Modifie l'entete des fichiers à l'ancienne norme
+#
+# SYNOPSIS
+#    Usage : Formate_Header [-h]  directory
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    File : Fichier à modifier, ou -
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use File::Copy;
+
+# variables globales
+
+sub format_header {
+    my %header=@_;
+
+    my $format = <<'HEADER';
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision$
+# AUTEUR :   %AUTEUR% (BV Associates)
+# DATE :     %DATE%
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+%OBJECTIF%
+#
+# SYNOPSIS
+%USAGE%
+#
+# OPTIONS
+%OPTIONS%
+#
+# ARGUMENTS
+%ARGUMENTS%
+#
+# PREREQUIS
+%PREREQUIS%
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+HEADER
+
+    foreach my $elem (keys %header) {
+        chomp $header{$elem};
+
+        if ( ! grep {$_ eq $elem} qw(AUTEUR DATE) ) {
+            $header{$elem}=~s/^/#    /gm;
+        }
+
+        $format =~ s/%$elem%/$header{$elem}/;
+    }
+
+    $format =~ s/%[A-Z]+%/#/g;
+
+    return $format;
+}
+
+sub usage {
+    die("Usage")
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'h', \%opts ) or usage();
+
+usage() if $opts{h};
+
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 1 ) {
+    usage();
+}
+
+
+#  Corps du script
+###########################################################
+
+FILE:
+foreach my $file (@ARGV) {
+    next if ! -e $file || $file =~ /\.tmp$/;
+
+    open(my $file_fd, '<',$file) or die $!;
+    open(my $temp_fd, '>',$file.'.tmp') or die $!;
+
+    print "Traitement $file : ";
+
+    if ( ! -f $file ) {
+        print "KO\n";
+        next FILE;
+    }
+
+    my %header;
+
+    my $body;
+
+    my $shebang = <$file_fd>;
+    if ( ! defined $shebang || $shebang !~ /perl/ ) {
+        print "Pas un fichier Perl\n";
+        close($file_fd);
+        close($temp_fd);
+        unlink $file.'.tmp';
+        next FILE;
+    }
+    while (<$file_fd>) {
+        if ( ! $body && /^# BV Associates/ ) {
+            print "déjà formaté\n";
+            close($file_fd);
+            close($temp_fd);
+            unlink $file.'.tmp';
+            next FILE;
+        }
+        elsif ( $body ) {
+            print $temp_fd $_;
+        }
+        elsif ( /^####################/ ) {
+            $body=1;
+            print $temp_fd "#! /usr/bin/env perl\n";
+            print $temp_fd format_header(%header);
+        }
+        else {
+            ( /Auteur : (.+)$/)?$header{AUTEUR}=$1:0;
+
+            ( /\@I-SIS Date : ([\d\/]+)/)?$header{DATE}=$1:
+            ( /\@I-SIS FONCTION : (.*)/)?$header{OBJECTIF}=$1:
+            ( /\@I-SIS USAGE : (.*)/)?$header{USAGE}=$1:
+            ( /\@I-SIS OPT : (.*)/)?$header{OPTIONS}.=$1."\n":
+            ( /\@I-SIS ARG : (.*)/)?$header{ARGUMENTS}.=$1."\n":
+            ( /\@I-SIS ENV : (.*)/)?$header{PREREQUIS}.=$1."\n":
+            1;
+        }
+    }
+
+
+    close($file_fd);
+    close($temp_fd);
+    move($file.'.tmp',$file) or die $!;
+    chmod 0755, $file or die $!;
+    print "OK\n";
+            close($file_fd);
+}

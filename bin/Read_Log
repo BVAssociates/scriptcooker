@@ -1,0 +1,149 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Read_Log [-h] [-b] [-o(lder than) <Days>] [-n(ewer than) <Days>] [-d(omain) <Domain>] 
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    Table de log à afficher
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use Carp;
+use Date::Pcalc qw{Add_Delta_DHMS Today_and_Now};
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Read_Log [-h] [-o(lder than) <Days>] [-n(ewer than) <Days>] [-d(omain) <Domain>] 
+    [-u(ser) <User>] [-t(ype message) <Type>] logstd | logerr
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'ho:n:d:u:t:', \%opts ) or usage();
+
+usage() if $opts{h};
+
+# OBSOLETE
+my $report_output = $opts{b};
+
+my $older_than = $opts{o};
+my $newer_than = $opts{n};
+my $domain     = $opts{d};
+my $user       = $opts{u};
+my $type       = $opts{t};
+
+if ( defined $older_than and $older_than !~ /^\d+$/ ) {
+    die(_t("Format incorrect : [_1]",$older_than));
+}
+if ( defined $newer_than and $newer_than !~ /^\d+$/ ) {
+    die(_t("Format incorrect : [_1]",$newer_than));
+}
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 1 ) {
+    $logger->error(_t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $table_name = shift @ARGV;
+
+if ( $table_name !~ /^logstd|logerr$/ ) {
+    usage();
+}
+
+#  Corps du script
+###########################################################
+
+my $itable;
+
+$itable = ScriptCooker::ITable->open($table_name);
+
+my @conditions_list;
+if ( $domain ) {
+    push @conditions_list, "Domain = '$domain'";
+}
+
+if ( $user ) {
+    push @conditions_list, "User = '$user'";
+}
+
+if ( $type ) {
+    push @conditions_list, "TypeMessage = '$type'";
+}
+
+if ( $older_than ) {
+    my @today = Today_and_Now();
+
+    my @date_back = Add_Delta_DHMS( @today, - $older_than ,0,0,0);
+    my $date_back_formated = sprintf("%04d%02d%02d%02d%02d%02d",@date_back);
+    push @conditions_list, "Date < $date_back_formated";
+}
+
+if ( $newer_than ) {
+    my @today = Today_and_Now();
+
+    my @date_back = Add_Delta_DHMS( @today, - $newer_than ,0,0,0);
+    my $date_back_formated = sprintf("%04d%02d%02d%02d%02d%02d",@date_back);
+    push @conditions_list, "Date > $date_back_formated";
+}
+
+
+if ( @conditions_list ) {
+    $itable->query_condition(join(' AND ', @conditions_list));
+}
+
+$itable->display_table();

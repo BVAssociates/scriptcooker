@@ -1,0 +1,175 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 450 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Parameters [-h] [-v] [-e] [-s] [ParameterFile | Table | -]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -v : interprete les variables
+#    -e : exporte les variables dans un format shell
+#    -s : n'affiche pas l'entete
+#
+# ARGUMENTS
+#    ParameterFile | Table | - : fichier de parametre
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use ScriptCooker::Utils 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Parameters [-h] [-v] [ParameterFile | Table | -]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hves', \%opts ) or usage();
+
+
+my $eval_vars = $opts{v};
+my $print_header = ! $opts{s};
+my $export_vars = $opts{e};
+
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV > 1 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $parameter_file = shift @ARGV;
+
+if ( $parameter_file ) {
+    if ( ! -e $parameter_file && $parameter_file ne '-' ) {
+        my $parameter_table=search_file($parameter_file,{type => 'tab'} );
+        
+        if ( $parameter_table ) {
+            $parameter_file=$parameter_table;
+        }
+    }
+    
+    $ENV{"PARAMETERS_FILE"}=$parameter_file;
+}
+
+
+#  Corps du script
+###########################################################
+
+my %definition_hash=(
+        SEP => '%%',
+        HEADER => 'Variables de la tables parameters',
+);
+
+my $parameter=ScriptCooker::ITable->open("parameters");
+
+my @vars;
+my @values;
+while (my %line=$parameter->fetch_row()){
+
+    if ( $eval_vars) {
+        $line{Value}=evaluate_variables($line{Value},{
+                                             leave_unknown => 0,
+                                             backticks     => 1,
+                                        });
+    }
+    
+    push @vars, $line{Parameter};
+    push @values, $line{Value};
+    
+    # Les variables suivantes doivent connaître cette variable
+    $ENV{$line{Parameter}}=$line{Value};
+}
+
+$definition_hash{FORMAT}=join( $definition_hash{SEP}, @vars);
+
+my $definition = ScriptCooker::Define->new({definition => \%definition_hash});
+my $virtual_table = ScriptCooker::ITable::ITools_interface->open($definition);
+
+#TODO
+if ( $export_vars ) {
+
+    if ( $print_header ) {
+        my %desc = $definition->describe();
+        foreach my $def (qw(SEP FORMAT ROW SIZE HEADER KEY)) {
+            print format_export_vars($def, $desc{$def},{
+                                            quote => 'single',
+                                            shell => 'sh'
+                                            });
+        }
+    }
+
+    foreach my $var (@vars) {
+        print format_export_vars($var, shift @values, {
+                                            quote => 'double',
+                                            shell => 'sh'
+                                            });
+    }
+}
+else {
+    if ( $print_header ) {
+        print $virtual_table->get_select_header()."\n";
+    }
+    print join($definition_hash{SEP}, @values)."\n";
+}
+
+# Construit une definition sur mesure
+#print format_export_vars($line{Parameter}, $line{Value});
+
+
+
+
+

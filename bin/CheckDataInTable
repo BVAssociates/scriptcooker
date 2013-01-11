@@ -1,0 +1,223 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 400 $
+# AUTEUR :   T. ZUMBIEHL (BV Associates)
+# DATE :     29/11/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#     Verifie la presence de donnees dans une table
+#
+# SYNOPSIS
+#     CheckDataInTable [-h] [-v] <Table> <Condition> [<Occurences>]
+#
+# OPTIONS
+#     -h : Affiche le(s) synopsis
+#     -v : Active la verbosite de la procedure
+#
+# ARGUMENTS
+#     Table : Nom de la table
+#     Condition : Condition de selection des donnees
+#     Occurences : Definition du nombre d'occurences
+#
+# PREREQUIS
+#     Aucun
+#
+# REMARQUE
+#     La condition peut être vide, mais elle doit exister.
+#     Le nombre d'occurences est symbolisé par l'une des syntaxes suivantes :
+#       - n : Le nombre d'occurence doit correspondre au nombre n
+#       - -m : Le nombre d'occurences doit etre d'au plus de m
+#       - n- : Le nombre d'occurences doit etre d'au moins n
+#       - n-m : Le nombre d'occurences doit etre compris entre n et m
+#       - Toute combinaison des expressions precedentes separees par des 
+#         virgules
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# -------
+# Imports
+# -------
+use strict;
+use warnings;
+use Getopt::Std;
+use Carp;
+
+use ScriptCooker::Utils 2.1.0;
+use ScriptCooker::ITable 2.1.0;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+
+# ------------------
+# Fonctions internes
+# ------------------
+# --------------------------------------------------------------
+# Nom : usage
+#
+# Description :
+# Genere un message contenant le synopsis du script.
+# --------------------------------------------------------------
+sub usage {
+    die(_t("Usage: [_1]", <<USAGE ));
+CheckDataInTable [-h] [-v] <Table> <Condition> [<Occurences>]
+USAGE
+}
+
+# -----------------
+# Variables locales
+# -----------------
+my %opts;
+my $verbose = 0;
+
+my $table_name;
+my $condition;
+my $occurences = "1-";
+
+my $table;
+my $total_occurences = 0;
+my @expressions;
+my $match = 0;
+
+# ----------------------
+# Traitement des options
+# ----------------------
+getopts('hv', \%opts) or usage();
+usage() if ($opts{h});
+$verbose = 1 if ($opts{v});
+
+# ------------------------
+# Traitement des arguments
+# ------------------------
+if (@ARGV < 2 || @ARGV > 3) {
+    $logger->error(_t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+$table_name = $ARGV[0];
+$condition = $ARGV[1];
+$occurences = $ARGV[2] if(@ARGV == 3);
+
+if ($verbose == 1) {
+    print "table_name=$table_name\n";
+    print "condition=$condition\n";
+    print "occurences=$occurences\n";
+}
+
+# ---------------------------
+# Verification des prerequis
+# ---------------------------
+
+# ---------------
+# Corps du script
+# ---------------
+
+# Ouverture de la table
+$table = ScriptCooker::ITable->open($table_name);
+
+# Specification de la condition
+$table->query_condition($condition);
+
+# Comptage du nombre de valeurs
+while (my %row = $table->fetch_row()) {
+    $total_occurences ++;
+}
+$table->close();
+
+print "total_occurences=$total_occurences\n" if ($verbose == 1);
+
+# Decoupage de la liste des occurences sur la virgule
+@expressions = split(/,/, $occurences);
+if ($verbose == 1) {
+    print "num expressions=" . scalar(@expressions) . "\n";
+}
+
+# Test sur les expressions de nombres d'occurences jusqu'a ce qu'il y
+# en ait une qui corresponde ou que toutes les expressions ont ete testees
+while (@expressions > 0 && $match == 0) {
+    my $lower_limit = 0;
+    my $upper_limit = "";
+    my $expression;
+    my $dash_pos = 0;
+    my @dash_array;
+
+    $expression = shift @expressions;
+    print "expression=$expression\n" if ($verbose == 1);
+    $dash_pos = index($expression, "-");
+    print "dash_pos=$dash_pos\n" if($verbose == 1);
+
+    if ($dash_pos == -1) {
+        if ($expression !~ /^\d+$/) {
+            die(_t("Format incorrect : [_1]",$expression));
+        }
+
+        # Il n'y a pas de tiret dans l'expression, c'est un nombre
+        $lower_limit = $expression;
+        $upper_limit = $expression;
+    }
+    else {
+        if ($expression !~ /^\d+-$/ and $expression !~ /^-\d+/
+                and $expression !~ /^\d+-\d+$/) {
+            die(_t("Format incorrect : [_1]",$expression));
+        }
+
+        # Il faut decouper la chaine sur le tiret
+        @dash_array = split(/-/, $expression);
+        $lower_limit = $dash_array[0] if ($dash_array[0] =~ /^\d+$/);
+
+        # S'il n'y a quelque chose apres le tiret, c'est qu'il y a une limite
+        # haute
+        if (@dash_array > 1 && $dash_array[1] ne "") {
+            $upper_limit = $dash_array[1];
+        }
+    }
+    if ($verbose == 1) {
+        print "lower_limit=$lower_limit\n";
+        print "upper_limit=$upper_limit\n";
+    }
+
+    # Test si le nombre d'occurences correspond aux limites
+    if (($upper_limit eq "" && $total_occurences >= $lower_limit)
+            || ($total_occurences >= $lower_limit
+            && $total_occurences <= $upper_limit)) {
+        $match = 1;
+        if ($verbose == 1) {
+            print "Match pour [$lower_limit,$upper_limit]\n";
+        }
+    }
+    else {
+        if ($verbose == 1) {
+            print "Pas match pour [$lower_limit,$upper_limit]\n";
+        }
+    }
+}
+
+if ($match == 1) {
+    print "MATCH !\n" if ($verbose == 1);
+}
+else {
+    print "NO MATCH !\n" if ($verbose == 1);
+    set_exit_code(1);
+}

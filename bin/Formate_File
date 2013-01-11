@@ -1,0 +1,128 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Formate_File [-h]  [-s Sep/NewSep [-n NbFields]] File | -
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -s : indique un separateur
+#    -n : nombre de separateur à modifier
+#
+# ARGUMENTS
+#    File : Fichier à modifier, ou -
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Formate_File [-h]  [-s Sep/NewSep [-n NbFields]] File | -
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hs:n:', \%opts ) or usage();
+
+my $separator_definition = $opts{s};
+my $replace_nb       = $opts{n};
+
+my ($old_sep,$new_sep);
+if ( defined $separator_definition) {
+    ($old_sep,$new_sep) = ($separator_definition =~ m{^(.*)/(.*)$});
+
+    if ( $separator_definition =~ /\\[n]/ ) {
+        usage();
+    }
+
+    $old_sep =~ s/\\t/\t/g;
+    $new_sep =~ s/\\t/\t/g;
+    $old_sep=quotemeta($old_sep);
+}
+
+if ( defined $replace_nb ) {
+    if ( $replace_nb !~ /^\d+$/ || $replace_nb < 1 ) {
+        usage();
+    }
+}
+
+usage() if $opts{h};
+
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 1 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+
+#  Corps du script
+###########################################################
+
+
+# utilise le descripteur magique <>
+while ( my $line=<> ) {
+
+    if ( $new_sep ) {
+        if ( $replace_nb ) {
+            foreach my $nb ( 1 .. $replace_nb-1) {
+                $line =~ s/$old_sep/$new_sep/;
+            }
+        }
+        else {
+            $line =~ s/$old_sep/$new_sep/g;
+        }
+    }
+
+    print $line;
+}

@@ -1,0 +1,186 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    Vérifie la validité des données d'un table
+#    Valide la cohérence des données de la clef étrangère
+#
+# SYNOPSIS
+#    Usage : Check [-h] <Table> [ON [<FKey_Table> [, ...]]] [WHERE <Condition>]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    Table : Table à vérifier
+#    Fkey_Table : Table sur laquelle la table à vérifier a des FKEY
+#    Condition : Condition sur les données
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log    2.1.0 qw(_t);
+use ScriptCooker::ITools 2.1.0 qw(:LOG check_table set_exit_code);
+use ScriptCooker::Define 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Check [-h] <Table> [ON [<FKey_Table> [, ...]]] [WHERE <Condition>]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'h', \%opts ) or usage();
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 1 ) {
+    log_error(_t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $table_name;
+my @conditions;
+my @ftables;
+my $check_fkey;
+
+$table_name=shift @ARGV;
+
+# automate pour la grammaire des arguments
+my $current_keyword='TABLE';
+foreach my $arg ( @ARGV ) {
+
+    if ($current_keyword eq 'TABLE') {
+        if ( uc($arg) eq 'ON' ) {
+            $current_keyword = uc($arg);
+            $check_fkey=1;
+        }
+        else {
+            usage();
+        }
+    }
+    elsif ( $current_keyword eq 'ON') {
+        if ( uc($arg) eq 'WHERE' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            push @ftables, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'WHERE') {
+        push @conditions, $arg;
+    }
+    else {
+        usage();
+    }
+}
+
+if ( @ftables ) {
+    @ftables = split(/\s*,\s*/, join(' ', @ftables));
+}
+my $condition = join(' ', @conditions);
+
+#  Corps du script
+###########################################################
+
+# recupération de la definition de la table
+my $definition = ScriptCooker::Define->new($table_name);
+
+# stockage local de la structure des FKEY
+my %fkey_for_table = $definition->fkey();
+
+if ( $check_fkey && ! @ftables ) {
+    @ftables=keys %fkey_for_table;
+}
+
+print _t("-- Check de la table [_1] ...",$table_name),"\n";
+
+# verification de la présence d'une clef primaire
+if ( ! $definition->key() ) {
+    log_warning(_t("La table [_1] ne possede pas de cle primaire.",$table_name),
+            { severity => 201} );
+}
+
+# verification de la présence des tables référencées par clef étrangère
+foreach ( @ftables ) {
+    if ( ! exists $fkey_for_table{$_} ) {
+        die(_t("La table [_1] n'est pas une table de référence",$_));
+    }
+    # Pour être IT20_COMPLIANT
+    print _t("-- Check sur la table [_1] ...",$_),"\n";
+}
+
+# condition de selection
+my %options;
+if ( $condition ) {
+    $options{condition}=$condition;
+}
+
+
+if ( $check_fkey ) {
+    if ( @ftables ) {
+        $options{fkey_on} = \@ftables;
+    }
+    else {
+        $options{fkey}= 1;
+    }
+}
+
+# appel de la fonction dans ScriptCooker::ITools
+my @error_messages = check_table($table_name, \%options);
+
+if ( @error_messages ) {
+    foreach my $mesg ( @error_messages ) {
+        print STDERR $mesg,"\n";
+    }
+    set_exit_code(202);
+}
+

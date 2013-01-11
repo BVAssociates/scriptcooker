@@ -1,0 +1,179 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 450 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    Copie un fichier ou un table vers un emplacement
+#    Permet de créer une sauvegarde du fichier écrasé
+#
+# SYNOPSIS
+#
+#
+# OPTIONS
+#    -h : pour avoir l'utilisation de la ligne de commande
+#    -s : pour sauvegarder le fichier destination s'il existe
+#    -i : pour ecraser/sauver interactivement le fichier destination
+#         Par defaut le fichier est ecrase s'il existe
+#    -t : si l'entree est une table de definition
+#    -f : si l'entree est un fichier de donnees
+#
+# ARGUMENTS
+#    TableDef : Table de definition
+#    FileSrc : Fichier de donnees source
+#    FileDest : Fichier de donnees cible
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log    2.1.0 qw($logger _t);
+use ScriptCooker::Utils  2.1.0 qw(:LOG search_file);
+use ScriptCooker::ITools 2.1.0;
+use ScriptCooker::Define 2.1.0;
+use Carp;
+
+use File::Basename;
+use File::Copy;
+use File::Spec;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Copie_File [-h] [-i|-s] <-t TableDef |-f FileSrc> <FileDest>
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'histf', \%opts ) or usage();
+
+usage() if $opts{h};
+
+my $prompt_user = $opts{i};
+my $backup_file = $opts{s};
+my $table_name  = $opts{t};
+my $file_name   = $opts{f};
+
+if ( $prompt_user and $backup_file ) {
+    usage();
+}
+
+if ( !( $table_name xor $file_name) ) {
+    usage();
+}
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 2 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $source = shift @ARGV;
+my $destination = shift @ARGV;
+
+#  Corps du script
+###########################################################
+
+my $source_file;
+if ( $table_name ) {
+    my $definition=ScriptCooker::Define->new($source);
+    $source_file=$definition->file();
+    if ( ! $source_file ) {
+        die(_t("Impossible de trouver la table [_1]",$source));
+    }
+}
+elsif ( basename($source) eq $source ) {
+    $source_file=search_file($source, {type => 'tab'} );
+    if ( ! $source_file ) {
+        die(_t("Impossible de trouver la table [_1]",$source));
+    }
+}
+else {
+    $source_file = $source;
+}
+
+if ( ! -r $source_file) {
+    die(_t("Impossible d'ouvrir le fichier [_1] en lecture !",$source_file));
+}
+
+my $destination_file;
+if ( basename($destination) eq $destination ) {
+    # meme repertoire
+    $destination_file = File::Spec->catfile(
+                    dirname($source_file),
+                    $destination
+                    );
+}
+else {
+    $destination_file = $destination;
+}
+
+if ( -e $destination_file ) {
+    my $answer="";
+    if ( $prompt_user ) {
+        print _t("Voulez-vous le sauvegarder avant (o,O) : ");
+        $answer = <STDIN>;
+    }
+
+    if ( $backup_file or $answer =~ /^[oOyY]$/ ) {
+        my $index=1;
+        while ( -e $destination_file.'.'.$index ) {
+            $index++;
+        }
+        $destination_file = $destination_file.'.'.$index;
+    }
+}
+
+log_info(_t("Copie de [_1] en [_2]",$source_file,$destination_file));
+
+my $res = copy($source_file, $destination_file);
+if ( $res != 1 ) {
+    die(_t("Impossible de copier le fichier [_1]",$source_file));
+}
+
+
+
+
+
+
+
+

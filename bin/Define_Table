@@ -1,0 +1,138 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Define_Table [-h] Table
+#
+# OPTIONS
+#    -h pour avoir l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    Table : nom de la table à décrire
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::Define 2.1.0;
+use ScriptCooker::Utils 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+        croak(_t("Usage: [_1]","Define_Table [-h] Table"));
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'h', \%opts ) or usage();
+
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV != 1 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $table_name = shift @ARGV;
+
+
+#  Corps du script
+###########################################################
+
+
+my $definition = eval { ScriptCooker::Define->new($table_name) };
+if ( $@ ) {
+    if ( $ENV{IT20_COMPLIANT} ) {
+        set_exit_code(203);
+    }
+    die $@;
+}
+
+my %description=$definition->describe();
+
+my @print_order = (
+            "DEFFILE",
+            "TABLE",
+            "HEADER",
+            "TYPE",
+            "SEP",
+            "FILE",
+            "COMMAND",
+            "FORMAT",
+            "SIZE",
+            "ROW",
+            "KEY",
+            "NOTNULL",
+            "SORT",
+        );
+
+
+my @output;
+foreach my $env_var (@print_order) {
+    my $env_value = delete $description{$env_var};
+
+    print format_export_vars($env_var,$env_value, { shell => 'sh' });
+}
+
+foreach my $env_var ( sort keys %description ) {
+    my $env_value = delete $description{$env_var};
+
+    print format_export_vars($env_var,$env_value, { shell => 'sh' });
+}
+
+
+if ( ! $definition->key() ) {
+    set_exit_code(201);
+    $logger->warning(_t("La table [_1] ne possede pas de cle primaire.",$table_name));
+}
+

@@ -1,0 +1,197 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Read_Row [-h] [-e] [-n] [-q] [-H] [-f]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -H : n'affecte pas le HEADER
+#    -n : affecte des variables vide si STDIN est vide
+#    -e : export au format bourne shell
+#    -q : quotes doubles
+#    -f : affiche "false" si rien à traiter (à utiliser dans un eval)
+#
+# ARGUMENTS
+#    
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use ScriptCooker::Utils 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Read_Row [-h] [-e] [-n] [-q] [-H] [-f]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hHneqf', \%opts ) or usage();
+
+my $empty_header    = $opts{H};
+
+my $output_quotes   = 'single';
+   $output_quotes   = 'double' if $opts{q};
+
+my $output_empty   = $opts{n};
+
+my $export_shell  = 'ksh';
+   $export_shell  = 'sh' if $opts{e};
+
+my $show_false    = $opts{f};
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV > 0 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+
+#  Corps du script
+###########################################################
+
+my %var_is_mandatory=(
+        SEP     => 1,
+        FORMAT  => 1,
+        ROW     => 0,
+        SIZE    => 0,
+        HEADER  => 0,
+        KEY     => 0,
+    );
+
+my %definition_hash;
+foreach my $env_var ( keys %var_is_mandatory ) {
+    if ( $var_is_mandatory{$env_var} ) {
+        $definition_hash{$env_var} = $ENV{$env_var} if $ENV{$env_var};
+    }   
+    else {
+        $definition_hash{$env_var} = $ENV{$env_var};
+    }
+}
+
+my $itable;
+
+# ouvre la sortie d'un Select sur l'entree standard
+$itable = ScriptCooker::ITable->open('-', {definition => \%definition_hash} );
+
+# force la liste des champs pour palier à un bug I-TOOLS
+if ( $ENV{IT20_COMPLIANT} ) {
+    $itable->query_field( $itable->query_field() );
+}
+
+my %row=$itable->fetch_row();
+$itable->close();
+
+if ( $output_empty && ! %row ) {
+    @row{ $itable->query_field() } = ("") x $itable->query_field();
+}
+
+if ( %row ) {
+
+    if ( $itable->definition()->def_file() ) {
+        my %description=$itable->definition()->describe();
+
+        my @print_order = (
+                    "SEP",
+                    "FORMAT",
+                    "ROW",
+                    "SIZE",
+                    "HEADER",
+                    "KEY",
+                );
+
+
+        my @output;
+        foreach my $env_var (@print_order) {
+            my $env_value = delete $description{$env_var};
+
+            if ( $empty_header && $env_var eq 'HEADER' ) {
+                $env_value ="";
+            }
+
+            print format_export_vars($env_var,$env_value, {
+                                            shell => $export_shell,
+                                            # quote force a single car comportement compatible
+                                            quote => 'single',
+                                        });
+        }
+    }
+
+
+    foreach my $field ( $itable->query_field() ) {
+
+        print format_export_vars($field,$row{$field}, {
+                                            shell => $export_shell,
+                                            quote => $output_quotes,
+                                        });
+    }
+
+}
+else {
+    # comportement IT20_COMPLIANT
+    set_exit_code(71);
+
+    if ( $show_false ) {
+        print "false\n";
+    }
+}
+
+
+
+
+

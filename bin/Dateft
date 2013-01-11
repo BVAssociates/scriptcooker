@@ -1,0 +1,175 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Dateft [-h] [-t j[,h[,m]]] [-o "Fmt sortie" | -s]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -t : temps à ajouter
+#    -o : format de sortie
+#    -s : format de sortie en seconde
+#    -i : format d'entree
+#
+# ARGUMENTS
+#    Date : Date à formater
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use Carp;
+
+use Date::Pcalc qw{Today_and_Now Add_Delta_DHMS};
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Dateft [-h] [-t j[,h[,m]]] [-o "Fmt sortie" | -s]
+            [[-i "Fmt entrée"] {"Date en entrée"|-}]
+
+    Fonction de formatage de la date courante ou d'une date donnée.
+
+     - Le reformatage d'une date donnée en argument ou lue (-), utilise
+       un format d'entrée :
+        . L'option -i permet de donner la chaîne de format en entrée,
+          (Cf. la commande système date),
+        . Par défaut, le format en entrée utilisera la variable
+          DATE_INFMT, ou "%Y%m%d%H%M%S" si celle-ci est vide.
+
+     - Le format de sortie peut-être donné ainsi :
+        . L'option -s donne la date en secondes depuis le 01/01/1970,
+        . L'option -o permet de spécifier le format de sortie,
+          (Cf. la commande système date),
+        . Par défaut, le format de sortie utilisera la variable
+          DATE_OUTFMT, ou "%Y%m%d%H%M%S" si celle-ci est vide.
+
+     - La date donnée peut-être modifiée avec l'option -t :
+        . On spécifiera +- un nombre de jours j,
+        . On spécifiera +- un nombre d' heures h,
+        . On spécifiera +- un nombre de minutes m.
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hi:o:st:', \%opts ) or usage();
+
+usage() if $opts{h};
+
+my $input_format = $opts{i};
+my $output_format = $opts{o};
+my $output_epoch = $opts{s};
+
+my @add_time=split(/,/, $opts{t}) if $opts{t};
+
+
+if ( $input_format or $output_format ) {
+    die(_t("Les options [_1] ne sont pas implementées","-i,-o"));
+}
+
+if ( @add_time > 3 ) {
+
+    die(_t("Format incorrect : [_1]",$opts{t}));
+}
+
+foreach my $nb ( @add_time) {
+
+    if ( $nb !~ /^-?\d+$/ ) {
+        die(_t("Format incorrect : [_1]",$nb));
+    }
+}
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 0 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $input_date=shift @ARGV;
+
+my @date;
+if ( not defined $input_date ) {
+    @date=Today_and_Now();
+}
+else {
+    if ( $input_date eq '-' ) {
+        $input_date = <STDIN>;
+    }
+
+    @date = ( $input_date =~ /^
+                        (\d{4})(\d{2})(\d{2})   #YMD
+                        (\d{2})(\d{2})(\d{2})   #HMS
+                    $/x ) ;
+
+    if ( ! @date ) {
+        die(_t("Format incorrect : [_1]",$input_date));
+    }
+}
+
+#  Corps du script
+###########################################################
+
+my @converted_date;
+
+if ( @add_time ) {
+
+    foreach my $i (0..3) {
+        if ( ! defined $add_time[$i] ) {
+            $add_time[$i]=0;
+        }
+    }
+
+    @converted_date=Add_Delta_DHMS(@date, @add_time);
+}
+else {
+    @converted_date=@date;
+}
+
+
+printf ("%04d%02d%02d%02d%02d%02d\n", @converted_date);
+

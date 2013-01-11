@@ -1,0 +1,141 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Log_End [-h] [-s] [-l] [-o] Message
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -s : Ecrit un message seulement sur l'ecran
+#    -l : Ecrit un message seulement dans le fichier de log standard
+#    -o : Ecrit à l'ecran le message destine a la log standard
+#
+# ARGUMENTS
+#    Message : Message a traiter
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t init_logger set_exit_code};
+use ScriptCooker::Define 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+        croak(_t("Usage: [_1]","Log_End [-h] [-s] [-l] [-o]"));
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hslo', \%opts ) or usage();
+
+my $print_output     =1 if $opts{s};
+my $print_log        =1 if $opts{l};
+my $print_log_output =1 if $opts{o};
+
+usage() if $opts{h};
+
+# options par defaut
+if (! %opts) {
+    ($print_output,$print_log)=(1,1);
+}
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV > 0 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+if (! $ENV{BV_PROC} ) {
+    croak( _t("Variable d'environnement [_1] manquante ou non exportee !", "BV_PROC"));
+}
+
+
+#  Corps du script
+###########################################################
+
+if ( $ENV{BV_SEVERITE} ) {
+    set_exit_code($ENV{BV_SEVERITE});
+}
+
+my $message;
+
+if ( defined $ENV{BV_SEVERITE} && $ENV{BV_SEVERITE} == 201) {
+    $message = _t("Fin en warning du processus numero [_1] de nom [_2]", $ENV{BV_PROC}, getppid() );
+}
+elsif ( defined $ENV{BV_SEVERITE} && $ENV{BV_SEVERITE} != 0) {
+    $message = _t("Fin anormale du processus numero [_1] de nom [_2]", $ENV{BV_PROC}, getppid() );
+}
+else {
+    $message = _t("Fin normale du processus numero [_1] de nom [_2]", $ENV{BV_PROC}, getppid() );
+}
+
+my $new_logger;
+if ( $print_log_output ) {
+    $new_logger=init_logger(undef,"STDOUT");
+    $new_logger->notice($message);
+}
+
+if ( $print_output || $print_log ) {
+
+    my $screen;
+    if ( $print_output ) {
+        $screen = "STDERR";
+    }
+
+    my $file;
+    if ( $print_log ) {
+        if ( ! $ENV{BV_LOGFILE} ) {
+        }
+        $file = $ENV{BV_LOGFILE};
+    }
+
+    $new_logger=init_logger($screen,$file);
+    $new_logger->notice($message);
+}
+
+set_exit_code(0);

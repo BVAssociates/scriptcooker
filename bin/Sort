@@ -1,0 +1,209 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Sort [-h] [-s] [-r] [-u] 
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -s : n'affiche pas la ligne d'entete
+#    -u : lignes uniques
+#    -r : affiche dans l'ordre inverse
+#    -o : colonnes a afficher en sortie
+#
+# ARGUMENTS
+#    Columns : tri des données
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Sort [-h] [-s] [-r] [-u] 
+          [-o Out1 [, ...]] BY [Col1 [ASC|DESC] [, ...]]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hsruo', \%opts ) or usage();
+
+my $print_header    = 1 if ! $opts{s};
+my $output_reverse  = $opts{r};
+my $output_distinct = $opts{u};
+my $output_column   = $opts{o};
+
+
+usage() if $opts{h};
+
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 0 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my @columns;
+my @sort;
+
+my $current_keyword='';
+if ( $output_column ) {
+    $current_keyword='COLUMN';
+}
+foreach my $arg ( @ARGV ) {
+
+    if ($current_keyword eq 'COLUMN') {
+        if ( uc($arg) eq 'BY' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            push @columns, $arg;   
+        }
+    }
+    elsif ($current_keyword eq 'BY') {
+            push @sort, $arg;   
+    }
+    else {
+        if ( uc($arg) eq 'BY' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            usage();
+        }
+    }
+}
+
+if ( @columns ) {
+    @columns = split(/\s*,\s*/, join(' ', @columns));
+    if ( @columns == 1 && $columns[0] eq '*') {
+        undef @columns;
+    }
+}
+
+if ( @sort ) {
+    @sort = split(/\s*,\s*/, join(' ', @sort));
+}
+
+
+#  Corps du script
+###########################################################
+
+my %var_is_mandatory=(
+        SEP     => 1,
+        FORMAT  => 1,
+        ROW     => 1,
+        SIZE    => 1,
+        HEADER  => 0,
+        KEY     => 0,
+    );
+
+my %definition_hash;
+foreach my $env_var ( keys %var_is_mandatory ) {
+    if ( $var_is_mandatory{$env_var} ) {
+        $definition_hash{$env_var} = $ENV{$env_var} if $ENV{$env_var};
+    }
+    else {
+        $definition_hash{$env_var} = $ENV{$env_var};
+    }
+}
+
+my $itable;
+
+# ouvre la sortie d'un Select sur l'entree standard
+$itable = ScriptCooker::ITable->open('-', {definition => \%definition_hash} );
+
+if ( @columns ) {
+    $itable->query_field(@columns);
+}
+
+
+if (@sort) {
+    $itable->query_sort(@sort);
+}
+elsif ( ! $itable->query_sort() ) {
+    $itable->query_sort($itable->key());
+}
+
+if ( $output_reverse ) {
+    $itable->query_reverse(1);
+}
+
+if ( $output_distinct ) {
+    $itable->query_distinct(1);
+}
+
+
+my $count_line=0;
+
+# affichage de l'entete
+if ( $print_header ) {
+    print $itable->get_select_header(
+                qw(
+                    SEP
+                    FORMAT
+                    ROW
+                    SIZE
+                    HEADER
+                    KEY
+                )
+            );
+    print "\n";
+}
+
+
+while (my @line=$itable->fetch_row_array()){
+
+    my $sep = $itable->output_separator();
+
+    print join($sep, @line)."\n";
+}

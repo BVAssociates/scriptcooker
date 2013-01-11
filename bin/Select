@@ -1,0 +1,249 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : SelectSelect [-h] [-e] [-s] [-m Sep] [-r Nlines] [Columns] 
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -e : interprete les variables d'environnement (sauf les clefs)
+#    -s : n'affiche pas la ligne d'entete
+#    -m : Specifie un separateur de colonne
+#    -r : n'affiche que les N premieres lignes
+#
+# ARGUMENTS
+#    Columns : liste des colonnes a afficher, séparées par ','
+#    Table : Table à afficher (- pour l'entrée strandard)
+#    Condition : Condition sur les données
+#    Columns : tri des données
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use ScriptCooker::Utils 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Select [-h] [-e] [-s] [-m Sep] [-r Nlines] [Columns]
+            FROM <Table|-> [WHERE <Condition>] [ORDER_BY <Columns>]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hsr:m:e', \%opts ) or usage();
+
+my $print_header     = 1 if ! $opts{s};
+my $output_separator = $opts{m};
+my $output_line_nb   = $opts{r};
+my $eval_vars        = $opts{e};
+
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 2 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my @columns;
+my @tables;
+my @conditions;
+my $has_sort;
+my @sort;
+
+my $current_keyword='COLUMN';
+foreach my $arg ( @ARGV ) {
+
+    if ($current_keyword eq 'COLUMN') {
+        if ( uc($arg) eq 'FROM' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            push @columns, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'FROM') {
+        if ( uc($arg) eq 'WHERE' ) {
+            $current_keyword = uc($arg);
+        }
+        elsif ( uc($arg) eq 'ORDER_BY' ) {
+            $current_keyword = uc($arg);
+            $has_sort=1;
+        }
+        else {
+            push @tables, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'WHERE') {
+        if ( uc($arg) eq 'ORDER_BY' ) {
+            $current_keyword = uc($arg);
+            $has_sort=1;
+        }
+        else {
+            push @conditions, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'ORDER_BY') {
+        push @sort, $arg;   
+    }
+}
+
+if ( @columns ) {
+    @columns = split(/\s*,\s*/, join(' ', @columns));
+    if ( @columns == 1 && $columns[0] eq '*') {
+        undef @columns;
+    }
+}
+my $table_name = join(' ', @tables);
+my $condition = join(' ', @conditions);
+
+if ( @sort ) {
+    @sort = split(/\s*,\s*/, join(' ', @sort));
+}
+
+
+#  Corps du script
+###########################################################
+
+my $itable;
+
+$itable = ScriptCooker::ITable->open($table_name);
+
+if ( @columns ) {
+    $itable->query_field(@columns);
+}
+
+if ($output_separator) {
+    $itable->output_separator($output_separator);
+}
+
+if ($has_sort) {
+    if (@sort) {
+        $itable->query_sort(@sort);
+    }
+    elsif ( ! $itable->query_sort() ) {
+        $itable->query_sort($itable->key());
+    }
+}
+
+if ($condition) {
+    $itable->query_condition($condition);
+}
+
+
+my $count_line=0;
+
+# affichage de l'entete
+my $header;
+if ( $print_header ) {
+    $header= $itable->get_select_header(
+                        qw(
+                            SEP
+                            FORMAT
+                            ROW
+                            SIZE
+                            HEADER
+                            KEY
+                        )
+                    );
+}
+
+if (defined $output_line_nb && $output_line_nb == 0) {
+    #affiche zero ligne!
+    if ( $header ) {
+        print $header."\n";
+    }
+}
+else {
+    my @fields = $itable->query_field();
+    my @keys = $itable->key();
+    while (my %row=$itable->fetch_row()){
+
+        if ( $header ) {
+            print $header."\n";
+            $header=undef;
+        }
+
+        my $sep = $itable->output_separator();
+
+        if ( $eval_vars ) {
+            foreach my $field (keys %row) {
+                if ( ! grep {$_ eq $field} @keys ) {
+                    $row{$field} = evaluate_variables($row{$field}, {
+                                                            backticks=>1
+                                                        });
+                }
+            }
+        }
+
+        my @line=@row{@fields};
+
+        print join($sep, @line)."\n";
+        $count_line++;
+
+        if (defined $output_line_nb && $count_line >= $output_line_nb) {
+            $itable->close();
+            last;
+        }
+    }
+    
+    # affiche l'entête si aucune ligne n'a été affichée
+    # NOTE IT20_COMPLIANT : on aurait pu simplement afficher l'entete
+    #     au début, mais les I-TOOLS 2.0 n'affichent pas d'entete en cas d'erreur
+    if ( $header ) {
+        print $header."\n";
+    }
+}

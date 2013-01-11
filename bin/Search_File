@@ -1,0 +1,207 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 459 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Search_File [-h] {-f|-e|-l|-d|-c|-t|-T|-p PATH} File | File.suf
+#
+# OPTIONS
+#    -h pour avoir l'utilisation de la ligne de commande
+#    -f : renvoie le chemin si le ficher est accessible en lecture
+#    -e : renvoie le chemin du fichier trouvé dans PATH
+#    -l : renvoie le chemin du fichier trouvé dans les librairies systemes
+#    -d : renvoie le chemin du fichier trouvé dans BV_DEFPATH avec le suffixe .def
+#    -c : renvoie le chemin du fichier trouvé dans BV_PCIPATH avec le suffixe .pci
+#    -t : renvoie le chemin du fichier trouvé dans BV_TABPATH
+#    -T : renvoie le chemin de la table correspondant à la definition
+#    -p PATH : renvoie le chemin du fichier trouvé dans PATH
+#
+# ARGUMENTS
+#    File.suf : renvoie le chemin du fichier en fonction de son suffixe
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 30/07/2012 - T. ZUMBIEHL (BV Associates)
+# Correction de la fiche FS#846
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t};
+use ScriptCooker::Define 2.1.0;
+use ScriptCooker::Utils 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+        croak(_t("Usage: [_1]","Search_File [-h] {-f|-e|-l|-d|-c|-t|-T|-p PATH} File | File.suf"));
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hfeldctTp:', \%opts ) or usage();
+
+
+usage() if $opts{h};
+
+my $path_var;
+$path_var = undef if $opts{f};
+$path_var = $opts{p} if $opts{p};
+
+my $file_type;
+$file_type = 'def' if $opts{d};
+$file_type = 'pci' if $opts{c};
+$file_type = 'tab' if $opts{t};
+$file_type = 'exe' if $opts{e};
+
+my $search_definition_table =1 if $opts{T};
+my $search_file      =1 if $opts{f};
+
+my %libpath_for_os = (
+        "LINUX"   => 'LD_LIBRARY_PATH',
+        "HP-UX"   => 'SHLIB',
+        "AIX"     => 'LIBPATH',
+    );
+
+if ( $opts{l} ) {
+        my $os = $ENV{OS_ICLE};
+        if ( ! $os ) {
+            croak(_t('Variable d\'environnement [_1] manquante ou non exportee !'));
+        }
+        elsif ( ! exists $libpath_for_os{$os} ) {
+            croak(_t("Impossible de trouver la variable des librairies dynamique pour l'OS [_1]", $os));
+        }
+        else {
+            $path_var = $libpath_for_os{$os};
+        }
+}
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV != 1 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $file_name = shift @ARGV;
+
+my  @understand_suffixes = (
+            'pci',
+            'def',
+        );
+
+my ($file_basename, $file_suffix) = ( $file_name =~ /^(.+)\.(\w+)$/ );
+
+# si le fichier contient une extension
+if ( $file_suffix && ! ( $path_var || $search_definition_table || $search_file) ) {
+    # si le type est spécifié et qu'il est identique au suffixe, on prend le basename
+    if ( $file_type && ( $file_type eq $file_suffix)) {
+        $file_name = $file_basename;
+        $file_type = $file_suffix;
+    }
+    # si il n'y a pas de type et que l'extension est inconnue : erreur
+    elsif ( ! $file_type ) {
+        if ( grep {$_ eq $file_suffix} @understand_suffixes) {
+            $file_name = $file_basename;
+            $file_type = $file_suffix;
+        }
+        else {
+            croak(_t("Option ou suffixe de recherche invalide !"));
+        }
+    }
+    # sinon on garde l'extension comme faisant partit du nom
+}
+
+# aucune option n'est spécifiee et impossible de déduire le type
+if ( ! ( $file_type || $path_var || $search_definition_table || $search_file )) {
+        usage();
+}
+
+#  Corps du script
+###########################################################
+
+
+if ( $search_definition_table ) {
+    $logger->info(_t("Création d'un objet Define"));
+    my $definition = ScriptCooker::Define->new($file_name);
+    if ( $definition->command() ) {
+        croak(_t("La table [_1] est une table virtuelle", $file_name));
+    }
+    elsif ( -e $definition->file ) {
+        print $definition->file."\n";
+    }
+    else {
+        croak(_t("Impossible de trouver la table [_1]", $file_name));
+    }
+}
+elsif ( $search_file ) {
+    $logger->info(_t("Recherche directe du fichier [_1]",$file_name));
+    if ( ! -e $file_name ) {
+        croak(_t("Impossible de trouver le fichier [_1]",$file_name));
+    }
+    elsif ( ! -f $file_name ) {
+        croak(_t('Le nom de fichier [_1] n\'est pas valide',$file_name));
+    }
+    elsif ( ! -r $file_name ) {
+        croak(_t('Impossible d\'ouvrir le fichier [_1] en lecture !', $file_name));
+    }
+    else {
+        print "$file_name\n";
+    }
+}
+else {
+    $logger->info(_t("Recherche du fichier dans un PATH"));
+    my $found_file = search_file($file_name,{
+                                        type => $file_type,
+                                        path_var => $path_var,
+                                    });
+    if ( ! $found_file ) {
+        croak(_t("Impossible de trouver le fichier [_1]",$file_name));
+    }
+    elsif ( ! -r $found_file ) {
+        croak(_t('Impossible d\'ouvrir le fichier [_1] en lecture !',$file_name));
+    }
+    else {
+        print "$found_file\n";
+    }
+
+}

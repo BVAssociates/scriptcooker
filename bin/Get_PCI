@@ -1,0 +1,236 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Get_PCI [-h] [-s] [-e] [-t] FOR <Table> 
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -s : n'affiche pas la ligne d'entete
+#    -e : Evalue les variables Shells connues
+#    -t : Teste les conditions du panneau de commande
+#
+# ARGUMENTS
+#    Table : Table à afficher
+#    Condition : Condition sur les commandes
+#    JoinCondition : Condition sur les commandes des tables reférencées par une clef étrangère
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::Pci 2.1.0;
+use ScriptCooker::Utils 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Get_PCI [-h] [-s] [-e] [-t] FOR <Table> 
+                [WHERE <Condition>] [WITH JOIN <JoinCondition>]
+USAGE
+}
+
+sub print_pci {
+    my $itable_pci=shift;
+    my $table_name = shift;
+    my $eval_condition = shift;
+    my $eval_env_vars = shift;
+
+    my $sep    = $itable_pci->output_separator();
+    my @fields = $itable_pci->field();
+    while (my %line=$itable_pci->fetch_row()){
+
+        print join($sep, @line{@fields})."\n";
+    }
+
+    return;
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hset', \%opts ) or usage();
+
+my $print_header     = ! $opts{s};
+my $eval_env_vars    = $opts{e};
+my $eval_condition   = $opts{t};
+
+
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 2 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my @tables;
+my @conditions;
+my @join_conditions;
+my $with_join;
+
+my $current_keyword='';
+foreach my $arg ( @ARGV ) {
+
+    if ($current_keyword eq '') {
+        if ( uc($arg) eq 'FOR' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            usage();
+        }
+    }
+    elsif ( $current_keyword eq 'FOR') {
+        if ( uc($arg) eq 'WHERE' ) {
+            $current_keyword = uc($arg);
+        }
+        elsif ( uc($arg) eq 'WITH' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            push @tables, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'WHERE') {
+        if ( uc($arg) eq 'WITH' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            push @conditions, $arg;   
+        }
+    }
+    elsif ( $current_keyword eq 'WITH') {
+        if ( uc($arg) eq 'JOIN' ) {
+            $current_keyword = uc($arg);
+            $with_join=1;
+        }
+    }
+    elsif ( $current_keyword eq 'JOIN') {
+        push @join_conditions, $arg;   
+    }
+    else {
+        usage();
+    }
+}
+
+my $table_name = join(' ', @tables);
+my $condition = join(' ', @conditions);
+my $join_condition = join(' ', @join_conditions);
+
+if ( ! $table_name ) {
+    usage();
+}
+
+#use Data::Dumper;die Dumper(\@tables, \@conditions, \@join_conditions);
+
+
+#  Corps du script
+###########################################################
+
+my $definition;
+if ( $ENV{IT20_COMPLIANT} ) {
+    $definition = eval { ScriptCooker::Define->new($table_name) };
+    if ( $@ ) {
+        set_exit_code(203);
+        die $@;
+    }
+}
+
+my $itable_pci = ScriptCooker::Pci->open($table_name);
+
+$itable_pci->query_sort("");
+$itable_pci->eval_env_vars($eval_env_vars);
+$itable_pci->eval_condition($eval_condition);
+
+if ($condition) {
+    $itable_pci->query_condition($condition);
+}
+
+# affichage de l'entete
+if ( $print_header ) {
+    print $itable_pci->get_select_header(
+                            qw(
+                                SEP
+                                FORMAT
+                                ROW
+                                SIZE
+                                HEADER
+                                KEY
+                            )
+                        );
+    print "\n";
+
+}
+
+
+print_pci($itable_pci,$table_name, $eval_condition,$eval_env_vars);
+
+if ( $with_join && $definition ) {
+
+    my $fukey_table = $definition->fukey_table();
+    if ( $fukey_table ) {
+
+        my $fukey_pci=ScriptCooker::Pci->open($fukey_table);
+        $fukey_pci->query_sort("");
+        $fukey_pci->eval_env_vars($eval_env_vars);
+        $fukey_pci->eval_condition($eval_condition);
+
+        if ( $join_condition ) {
+            $fukey_pci->query_condition($join_condition);
+        }
+        else {
+            $fukey_pci->query_condition("");
+        }
+
+
+        print_pci($fukey_pci,$fukey_table, $eval_condition,$eval_env_vars);
+    }
+}

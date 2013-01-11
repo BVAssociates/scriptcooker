@@ -1,0 +1,146 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 395 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Delete [-h] FROM <Table> [WHERE <Condition> ]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#
+# ARGUMENTS
+#    Table : Table à modifier
+#    Condition : Selection de ligne
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use ScriptCooker::ITable 2.1.0;
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Usage : Delete [-h] FROM <Table> [WHERE <Condition> ]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'h', \%opts ) or usage();
+
+usage() if $opts{h};
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 2 ) {
+    $logger->error(_t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my $table_name;
+my @conditions;
+
+my $current_keyword;
+foreach my $arg ( @ARGV ) {
+
+    if ( ! $current_keyword ) {
+        if ( uc($arg) eq 'FROM' ) {
+            $current_keyword = uc($arg);
+        }
+        else {
+            usage();
+        }
+    }
+    elsif ($current_keyword eq 'FROM') {
+        if ( uc($arg) eq 'WHERE' ) {
+            $current_keyword = uc($arg);
+        }
+        elsif ( ! $table_name) {
+            $table_name = $arg;   
+        }
+        else {
+            usage();
+        }
+    }
+    elsif ( $current_keyword eq 'WHERE') {
+        push @conditions, $arg;   
+    }
+}
+
+my $conditions;
+if ( @conditions ) {
+    $conditions = join(' ', @conditions);
+}
+
+if ( ! $table_name ) {
+    usage();
+}
+
+#use Data::Dumper;die Dumper($table_name,\@values,\@conditions);
+
+#  Corps du script
+###########################################################
+
+my $itable;
+
+$itable = ScriptCooker::ITable->open($table_name);
+
+my @columns = $itable->field();
+
+my $separator = $itable->definition()->separator();
+
+if ( $conditions ) {
+    $itable->query_condition($conditions);
+}
+
+
+my $nb=$itable->delete_row();
+
+$logger->info(_t("[_1] lignes supprimées", $nb));
+
+

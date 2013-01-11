@@ -1,0 +1,181 @@
+#! /usr/bin/env perl
+#
+#    This file is part of ScriptCooker.
+#
+#    ScriptCooker is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    ScriptCooker is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
+#
+# --------------------------------------------------------------
+# BV Associates, 2011
+#
+# CLES :     I-TOOLS
+# REVISION : $Revision: 455 $
+# AUTEUR :   V. Bauchart (BV Associates)
+# DATE :     27/09/2011
+#
+# --------------------------------------------------------------
+#
+# OBJECTIF
+#    
+#
+# SYNOPSIS
+#    Usage : Split [-h] [-x] [-s Sep] [-f File] SPos [EPos [SPos [EPos ...]]]
+#
+# OPTIONS
+#    -h : l'utilisation de la ligne de commande
+#    -s : indique un separateur
+#    -f : fichier à decouper (STDIN sinon)
+#    -x : conserve les espaces
+#
+# ARGUMENTS
+#    SPos : indice de départ de colonne
+#    EPos : indice de fin de colonne
+#
+# PREREQUIS
+#    TOOLS_HOME
+#
+# REMARQUE
+#
+# --------------------------------------------------------------
+#
+# HISTORIQUE
+# 27/07/2012 - T. ZUMBIEHL (BV Associates)
+# Remplacement ITOOLS_COMPAT par IT20_COMPLIANT
+#
+# --------------------------------------------------------------
+
+# Inclusions obligatoires
+use strict;
+use warnings;
+use Getopt::Std;
+use ScriptCooker::Log 2.1.0 qw{$logger _t set_exit_code};
+use Carp;
+
+# variables globales
+
+sub usage {
+    die(_t("Usage: [_1]",<<USAGE ));
+Split [-h] [-x] [-s Sep] [-f File] SPos [EPos [SPos [EPos ...]]]
+USAGE
+}
+
+#  Traitement des Options
+###########################################################
+
+my %opts;
+getopts( 'hs:xf:', \%opts ) or usage();
+
+my $output_separator = $opts{s};
+my $keep_spaces      = $opts{x};
+my $filename         = $opts{f};
+
+if ( ! $filename ) {
+    $filename='-';
+}
+if ( ! $output_separator ) {
+    $output_separator=' ';
+}
+
+usage() if $opts{h};
+
+
+
+#  Traitement des arguments
+###########################################################
+
+if ( @ARGV < 0 ) {
+    $logger->error( _t("Le nombre d'arguments est incorrect"));
+    usage();
+}
+
+my @positions=@ARGV;
+
+foreach ( @positions ) {
+    if ( ! /^\d+$/ ) {
+        die (_t("L'argument [_1] n'est pas valide",$_));
+    }
+}
+
+#  Corps du script
+###########################################################
+
+open( my $file, $filename) or die(_t("Impossible d'ouvrir le fichier [_1].",$filename));
+
+while ( my $line = <$file> ) {
+
+    chomp $line;
+
+    if ( ! $line && ! @positions ) {
+        print "\n";
+        next;
+    }
+
+    my @temp_positions=@positions;
+    my @pair=( shift @temp_positions, shift @temp_positions);
+
+    my @result_list;
+    while ($pair[0]) {
+        my $spos=$pair[0]-1;
+
+        my $len;
+        if ( $pair[1] ) {
+            $len=$pair[1] - $spos;
+        }
+
+        my $string;
+        if ( $spos >= length $line ) {
+            $string="";
+        }
+        elsif ( defined $len && $len < length $line) {
+            $string = substr($line, $spos, $len);
+        }
+        else {
+            $string = substr($line, $spos);
+        }
+
+        push @result_list, $string;
+
+
+
+        @pair=( shift @temp_positions, shift @temp_positions);
+    }
+
+    if ( $ENV{IT20_COMPLIANT} ) {
+        # enlève les derniers elements vides (sauf le premier!)
+        my @list=@result_list;
+        my $last_seen;
+        foreach my $str ( reverse @list) {
+            if ( $str ne '' || @result_list == 1) {
+                if ( defined $last_seen ) {
+                    # remet un element vide à la fin du tableau
+                    push @result_list, '';
+                }
+                last;
+            }
+            $last_seen=pop @result_list;
+        }
+    }
+
+    if ( ! $keep_spaces ) {
+        foreach ( @result_list ) {
+            s/^\s+//;
+            s/\s+$//;
+        }
+    }
+
+
+    print join($output_separator, @result_list)."\n";
+}
+
+close($file);
+
