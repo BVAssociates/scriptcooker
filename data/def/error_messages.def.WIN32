@@ -1,0 +1,37 @@
+#
+#	I-SIS, 2007
+# 
+#@I-SIS	APP : I-SIS					$Revision: 453 $
+#
+#@I-SIS	I-CLE : I-TOOLS WINDOWS
+#
+#@I-SIS	Date : 02/03/2007				Auteur : A. Al Jallad
+#							 (BV Associates)
+#	Historique des modifications
+#
+#	-------------------------------------------------------------------
+#	|     Date	|    Auteur   |		 Description		  |
+#	-------------------------------------------------------------------
+#	|	   	|	      |   				  |
+#	-------------------------------------------------------------------
+#
+#@I-SIS	FONCTION : Collecte des tables des messages d'erreur
+#
+#@I-SIS	TABLE : error_messages.def
+#
+#@I-SIS	ENV : <Variables d'environnement nécessaires>
+#
+#@I-SIS COMMENT : <Commentaires d'utilisation>
+#
+#@I-SIS FORMAT : <Déscription des champs>
+#
+##########################################################################
+
+
+SEP=';'
+FORMAT='Function;Error;Message'
+SIZE='20s;4n;80s'
+NOTNULL='Function;Error;Message'
+KEY='Function;Error'
+SORT='Function, Error'
+HEADER="Liste des messages erreur de %COMPUTERNAME%"

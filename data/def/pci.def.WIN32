@@ -1,0 +1,38 @@
+#
+#	I-SIS, 2007
+# 
+#@I-SIS	APP : I-SIS					$Revision: 453 $
+#
+#@I-SIS	I-CLE : I-TOOLS WINDOWS
+#
+#@I-SIS	Date : 01/03/2007				Auteur : A. Al Jallad
+#							 (BV Associates)
+#	Historique des modifications
+#
+#	-------------------------------------------------------------------
+#	|     Date	|    Auteur   |		 Description		  |
+#	-------------------------------------------------------------------
+#	|	   	|	      |   				  |
+#	-------------------------------------------------------------------
+#
+#@I-SIS	FONCTION : Dictionnaire des Panneau de commandes de Table
+#
+#@I-SIS	TABLE : pci.def
+#
+#@I-SIS	ENV :
+#	- TableName : Nom de la table dont on veut accéder au .pci
+#
+#@I-SIS COMMENT :
+#
+#@I-SIS FORMAT :
+#
+##########################################################################
+
+
+SEP="~"
+FILE="`Search_File %TableName%.pci`"
+FORMAT="NodeType~Group~Label~Responsabilities~Condition~PreProcessing~Processor~Arguments~Confirm~PostProcessing~Icon"
+SIZE="12s~20s~20s~12s~40s~30s~10s~30s~1b~30s~10s"
+KEY="NodeType~Label"
+SORT="NodeType,Group,Label"
+HEADER="Panneau de commandes associé à la table %TableName%"

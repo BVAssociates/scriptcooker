@@ -1,0 +1,38 @@
+#
+#	I-SIS, 2006
+# 
+#@I-SIS	APP : I-SIS					$Revision: 453 $
+#
+#@I-SIS	I-CLE : I-TOOLS WINDOWS
+#
+#@I-SIS	Date : 20/10/2006				Auteur : A. Al Jallad
+#							 (BV Associates)
+#	Historique des modifications
+#
+#	-------------------------------------------------------------------
+#	|     Date	|    Auteur   |		 Description		  |
+#	-------------------------------------------------------------------
+#	|	   	|	      |   				  |
+#	-------------------------------------------------------------------
+#
+#@I-SIS	FONCTION : Dictionnaire des utilisateurs autorisés à Asuser
+#
+#@I-SIS	TABLE : asuser_allow.def
+#
+#@I-SIS	ENV :
+#
+#@I-SIS COMMENT :
+#	- Table de données associée d'accès uniquement root
+#
+#@I-SIS FORMAT :
+#
+##########################################################################
+
+
+SEP=':'
+FILE='%TOOLS_HOME%\tab\asuser_allow'
+FORMAT='UserFrom:UserTo:CommandList'
+SIZE='10s:10s:40s'
+NOTNULL='UserFrom:UserTo'
+KEY='UserFrom:UserTo'
+HEADER="Liste des utilisateurs autorisés a Asuser sur %COMPUTERNAME%"

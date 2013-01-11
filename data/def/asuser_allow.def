@@ -1,0 +1,21 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#	Table : asuser_allow.def
+#
+#       Dictionnaire des utilisateurs autorises a Asuser
+#
+#       $Revision: 1.1 $
+#
+
+SEP=':'
+FILE='$TOOLS_HOME/tab/asuser_allow'
+FORMAT='UserFrom:UserTo:CommandList'
+SIZE='10s:10s:40s'
+NOTNULL='UserFrom:UserTo'
+KEY='UserFrom:UserTo'
+HEADER="Liste des utilisateurs autorises a Asuser sur $HOSTNAME"

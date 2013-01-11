@@ -1,0 +1,19 @@
+#
+#       BV Associates, 2003
+#
+#       APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : pci.def
+#
+#       Dictionnaire des Panneau de commandes de Table
+#
+
+SEP="~"
+FILE="`Search_File $TableName.pci`"
+FORMAT="NodeType~Group~Label~Responsabilities~Condition~PreProcessing~Processor~Arguments~Confirm~PostProcessing~Icon"
+SIZE="12s~20s~20s~12s~40s~30s~10s~30s~1b~30s~10s"
+KEY="NodeType~Label"
+SORT="NodeType~Group~Label"
+HEADER="Panneau de commandes associé à la table $TableName"

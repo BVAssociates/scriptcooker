@@ -1,0 +1,16 @@
+# $Revision: 1.2 $
+#
+#Parameter;Value;Description
+#===========================
+
+HOSTNAME%%$(uname -n)%%Nom de la Machine
+OS_TYPE%%$(uname)%%Type d'OS Machine
+OS_VERS%%%%Version d'OS Machine
+OS_ICLE%%${OS_TYPE}%%ICle specifique Unix relatif à l'OS
+BV_PROC_SEP%%:%%Separateur de procedures (messages)
+BV_LANG%%.fr%%Langue d'integration
+BV_LICENCE%%%%Variable de Verbose de Licence (TRUE)
+CLES_HOME%%${BV_HOME}/ICles%%Repertoire des I-CLES
+ICLE_CONF%%_Isis%%Répertoire de configuration d'un I-CLES ICleName
+SERVICES_HOME%%${CLES_HOME}%%Repertoire des Services de I-CLES
+ICLE_SERVICE%%_Services%%Répertoire de configuration d'un Service de I-CLES

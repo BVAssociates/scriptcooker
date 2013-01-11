@@ -1,0 +1,37 @@
+#
+#	I-SIS, 2006
+# 
+#@I-SIS	APP : I-SIS					$Revision: 453 $
+#
+#@I-SIS	I-CLE : I-TOOLS WINDOWS
+#
+#@I-SIS	Date : 20/10/2006				Auteur : A. Al Jallad
+#							 (BV Associates)
+#	Historique des modifications
+#
+#	-------------------------------------------------------------------
+#	|     Date	|    Auteur   |		 Description		  |
+#	-------------------------------------------------------------------
+#	|	   	|	      |   				  |
+#	-------------------------------------------------------------------
+#
+#@I-SIS	FONCTION : Table des erreurs des tools et procedures
+#
+#@I-SIS	TABLE : logerr.def
+#
+#@I-SIS	ENV :
+#
+#@I-SIS COMMENT :
+#	- A Supprimer.
+#
+#@I-SIS FORMAT :
+#
+##########################################################################
+
+
+SEP='|'
+FILE="%BV_LOGERR%"
+FORMAT='Date|Domain|Pere|Fils|User|Proc|TypeMessage|Severity|Message'
+SIZE='19d|20s|6n|6n|8s|40s|20s|3n|100s'
+NOTNULL='Date|Domain|Pere|Fils|User|Proc|TypeMessage|Severity|Message'
+HEADER="Messages d erreur consignes de %COMPUTERNAME%"

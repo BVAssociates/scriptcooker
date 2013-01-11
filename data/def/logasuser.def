@@ -1,0 +1,19 @@
+#
+#       BV Associates, 2002
+#
+#	APP : I-TOOLS
+#
+#       PACK : I-TOOLS
+#
+#       Table : logasuser.def
+#
+#       Table des logs de la commande Asuser
+#
+#       $Revision: 1.1 $
+#
+
+SEP='|'
+FILE="$BV_LOGASUSER"
+FORMAT='Date|Heure|Pere|Fils|Proc|TypeMsg|UserFrom|UserTo|TypeSu|Message'
+SIZE='10s|8s|6n|6n|15s|7s|10s|10s|5s|40s'
+HEADER="Messages consignes de la commande Asuser"

@@ -1,0 +1,39 @@
+#
+#	I-SIS, 2006
+# 
+#@I-SIS	APP : I-SIS					$Revision: 453 $
+#
+#@I-SIS	I-CLE : I-TOOLS WINDOWS
+#
+#@I-SIS	Date : 18/10/2006				Auteur : A. Al Jallad
+#							 (BV Associates)
+#	Historique des modifications
+#
+#	-------------------------------------------------------------------
+#	|     Date  |    Auteur   |     Description                       |
+#	-------------------------------------------------------------------
+#   | 09/06/2009|     TZ      | Nouveau separateur : ~~               |
+#	-------------------------------------------------------------------
+#
+#@I-SIS	FONCTION : Definition de la table des parametres
+#
+#@I-SIS	TABLE : parameters.def
+#
+#@I-SIS	ENV : 
+#	- PARAMETERS_FILE : Nom du fichier de paramètres
+#
+#@I-SIS COMMENT :
+#	- L'ordre des parametres est important => Ne jamais trier
+#
+#@I-SIS FORMAT :
+#
+##########################################################################
+
+
+SEP='~~'
+FILE="%PARAMETERS_FILE%"
+FORMAT='Parameter~~Value~~Description'
+SIZE='15s~~50s~~60s'
+NOTNULL='Parameter'
+KEY='Parameter'
+HEADER="Liste de parametres"
