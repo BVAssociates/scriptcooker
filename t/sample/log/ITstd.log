@@ -1241,3 +1241,11 @@ Unable to find the module for definition TYPE : FT at /app/isis/ITools/bin/Selec
 20130110141738|TOOLS|5400|6644|vbauchart|Check|INFO|201|Ouverture de la table ScriptCooker::L10N::en=HASH(0xa2c6e24) de type Ouverture de la table [_1] de type [_2]
 20130110142106|TOOLS|2492|4364|vbauchart|Check|CRITICAL|202|Incorrect number of arguments at /c/Users/vbauchart/scriptcooker/bin/Check line 70
 20130110142111|TOOLS|2492|6772|vbauchart|Check|CRITICAL|202|Impossible de trouver ou d'ouvrir le fichier de definition ScriptCooker::L10N::en=HASH(0xa2d1080) at /c/Users/vbauchart/scriptcooker/bin/Check line 119
+20130115094856|TOOLS|1|3807|slooti|-e|INFO|0|Demarrage du programme (ARG=)
+20130115094856|TOOLS|1|3807|slooti|-e|INFO|0|Ouverture du panneau de commande de la table error_messages
+20130115094856|TOOLS|1|3807|slooti|-e|INFO|0|Ouverture de la table error_messages de type FT
+20130115094906|TOOLS|1|3807|slooti|-e|INFO|0|Sortie du programme avec le code 0
+20130116173403|TOOLS|1|19537|slooti|-e|INFO|0|Demarrage du programme (ARG=)
+20130116173404|TOOLS|1|19537|slooti|-e|INFO|0|Ouverture du panneau de commande de la table error_messages
+20130116173404|TOOLS|1|19537|slooti|-e|INFO|0|Ouverture de la table error_messages de type FT
+20130116173414|TOOLS|1|19537|slooti|-e|INFO|0|Sortie du programme avec le code 0

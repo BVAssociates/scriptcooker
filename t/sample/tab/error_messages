@@ -299,4 +299,3 @@ PC_LISTID_SQLNET;182;Impossible de trouver le Noyau SqlNet du user %s
 PC_STAT_TNSNAME;001;Le service TNS %s n'est pas decrit
 PC_STAT_TNSNAME;002;Il n'y a pas de listener demarre servant le service TNS %s
 PC_STAT_TNSNAME;003;Erreur de configuration de l'adresse du service TNS %s
-TEST;10;TEST
