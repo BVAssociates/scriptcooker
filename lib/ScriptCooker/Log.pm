@@ -13,7 +13,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with ScriptCooker.  If not, see <http://www.gnu.org/licenses/>.
 #
-﻿# ------------------------------------------------------------
+# ------------------------------------------------------------
 # Copyright (c) 2011, BV Associates. Tous droits reserves.
 # ------------------------------------------------------------
 #
